@@ -36,41 +36,45 @@ const Index = () => {
   };
 
   // Research-backed project data using effective title formulas
+  //TODO
   const projects = [
     {
-      title: "Built Scalable E-commerce Platform using React & Node.js",
-      description: "Reduced load time by 40% through strategic refactoring and implemented secure payment processing",
-      technologies: ["React", "TypeScript", "Node.js", "Stripe API", "PostgreSQL"],
-      impact: "40% faster load times, $2M+ monthly transactions processed",
+      title: "LLM-Powered Knowledge Assistant",
+      description: "Developed a domain-specific assistant that reduced support ticket resolution time by 70%.",
+      technologies: ["LangChain" , "FAISS" , "Hugging Face models"],
+      impact: "70% faster resolution, $150K annual cost savings",
       liveDemo: "#",
       github: "#",
-      category: "Full-Stack Development"
+      category: "Architecture Development"
     },
     {
-      title: "Developed Real-Time Analytics Dashboard (Python & D3.js)",
-      description: "Improved data visualization performance by 60% with interactive charts and WebSocket integration",
-      technologies: ["Python", "D3.js", "WebSockets", "Redis", "Docker"],
-      impact: "60% performance improvement, real-time data processing",
+      title: "Optimized LLM Inference API",
+      description: "Built a scalable inference service capable of handling 10K+ daily requests with low latency.",
+      technologies: ["ONNX Runtime", "TensorRT", "FastAPI", "Redis"],
+      impact: "Model quantization, GPU batching, async processing",
       liveDemo: "#",
       github: "#",
-      category: "Data Visualization"
+      category: "Latency reduced by 45%, 30% infra cost savings"
     },
     {
-      title: "Engineered Authentication System Rebuild (React & Supabase)",
-      description: "Enhanced security while reducing authentication time by 25% using modern JWT implementation",
-      technologies: ["React", "TypeScript", "Supabase", "JWT", "Tailwind CSS"],
-      impact: "25% faster auth, 99.9% uptime, enhanced security",
+      title: "Vector Search Analytics Platform",
+      description: "Designed a real-time analytics dashboard integrated with vector search for semantic queries.",
+      technologies: ["Python", "Milvus", "WebSockets", "D3.js"],
+      impact: "Enabled semantic search + 60% faster data retrieval",
       liveDemo: "#",
       github: "#",
-      category: "Security & Auth"
+      category: "RAG Architecture"
     }
   ];
 
   // Research shows skills should be positioned early for scanning priority
   const skills = {
-    "Frontend": ["React", "TypeScript", "JavaScript", "HTML5", "CSS3", "Tailwind CSS", "Vue.js"],
-    "Backend": ["Node.js", "Python", "PostgreSQL", "MongoDB", "Express.js", "GraphQL"],
-    "Tools & Cloud": ["Git", "Docker", "AWS", "Vercel", "Supabase", "CI/CD", "Jest"]
+    "LLM & GenAI": ["Hugging Face Transformers", "Accelerate", "Optimum", "LangChain", "LlamaIndex", "DeepSpeed", "ONNX", "TensorRT"],
+    "Vector Databases & Embeddings": ["FAISS", "Milvus", "Pinecone"],
+    "Backend & Databases": ["Python", "PostgreSQL", "MongoDB", "GraphQL"],
+    "MLOps & Infra": ["Docker", "Kubernetes", "CI/CD", "AWS", "GCP", "Model Monitoring", "Versioning"],
+    "Frontend(Basic)": ["React", "TypeScript", "JavaScript", "Vue.js", "Tailwind CSS"],
+    "Tools": ["Git", "Vercel", "Supabase", "Jest"]
   };
 
   return (
@@ -131,7 +135,7 @@ const Index = () => {
               
               {/* Concise personal brand statement - Research shows this is critical */}
               <p className="text-xl sm:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
-                I build responsive and scalable web applications with a focus on clean code, user experience, and measurable business impact.
+                AI Engineer specializing in LLM inference, Backend Systems & Scalable GenAI Applications
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -156,21 +160,21 @@ const Index = () => {
             
             <div className="max-w-4xl mx-auto">
               <p className="text-lg leading-relaxed mb-6">
-                With 5+ years of experience in full-stack development, I specialize in building modern web applications that solve real business problems. My expertise spans from responsive frontend interfaces to scalable backend architectures.
+                With 4+ years of experience in Python and backend engineering, I focus on building advanced AI and GenAI solutions that are production-ready and impactful. My work spans from intelligent NLP-driven chatbots to optimized LLM inference pipelines and scalable backend systems for real-world deployment.
               </p>
               <p className="text-lg leading-relaxed mb-8">
-                I'm passionate about writing clean, maintainable code and delivering measurable results. Whether it's reducing load times by 40% or processing millions in transactions, I focus on creating solutions that drive business value.
+                I emphasize clean, maintainable code and measurable results. For example, I've engineered systems that reduced incident resolution research time from hours to minutes, and optimized inference latency to cut costs while boosting throughput. My goal is always to translate technical solutions into tangible business value.
               </p>
               
               {/* Quick stats for immediate impact */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
                 <div className="p-4">
-                  <div className="text-3xl font-bold text-primary mb-2">5+</div>
+                  <div className="text-3xl font-bold text-primary mb-2">4+</div>
                   <div className="text-muted-foreground">Years Experience</div>
                 </div>
                 <div className="p-4">
-                  <div className="text-3xl font-bold text-primary mb-2">50+</div>
-                  <div className="text-muted-foreground">Projects Completed</div>
+                  <div className="text-3xl font-bold text-primary mb-2">10+</div>
+                  <div className="text-muted-foreground">Corporate Projects Completed</div>
                 </div>
                 <div className="p-4">
                   <div className="text-3xl font-bold text-primary mb-2">99.9%</div>
@@ -337,23 +341,23 @@ const Index = () => {
                 <Card className="p-6 text-center hover:shadow-lg transition-shadow">
                   <Mail className="w-8 h-8 text-primary mx-auto mb-4" />
                   <h3 className="font-semibold mb-2">Email</h3>
-                  <a href="mailto:alex@example.com" className="text-muted-foreground hover:text-primary transition-colors">
-                    alex@example.com
+                  <a href="mailto:diwan.sahilsing@gmail.com" className="text-muted-foreground hover:text-primary transition-colors">
+                    diwan.sahilsing@gmail.com
                   </a>
                 </Card>
                 
                 <Card className="p-6 text-center hover:shadow-lg transition-shadow">
                   <Linkedin className="w-8 h-8 text-primary mx-auto mb-4" />
                   <h3 className="font-semibold mb-2">LinkedIn</h3>
-                  <a href="https://linkedin.com/in/alexjohnson" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                    /in/alexjohnson
+                  <a href="https://www.linkedin.com/in/diwan-sahil" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                    diwan-sahil
                   </a>
                 </Card>
               </div>
 
               <div className="text-center">
                 <Button size="lg" asChild>
-                  <a href="mailto:alex@example.com">
+                  <a href="mailto:diwan.sahilsing@gmail.com">
                     <Mail className="w-4 h-4 mr-2" />
                     Send Message
                   </a>
@@ -371,13 +375,13 @@ const Index = () => {
                 © 2025 Sahil Singh Diwan. All rights reserved.
               </div>
               <div className="flex space-x-4">
-                <a href="https://github.com/alexjohnson" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="https://github.com/SahilSinghDiwan" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                   <Github className="w-5 h-5" />
                 </a>
-                <a href="https://linkedin.com/in/alexjohnson" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="https://www.linkedin.com/in/diwan-sahil/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                   <Linkedin className="w-5 h-5" />
                 </a>
-                <a href="mailto:alex@example.com" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="mailto:diwan.sahilsing@gmail.com" className="text-muted-foreground hover:text-primary transition-colors">
                   <Mail className="w-5 h-5" />
                 </a>
               </div>
