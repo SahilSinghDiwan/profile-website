@@ -361,7 +361,7 @@ const Index = () => {
 
               <div className="text-center">
                 <Button size="lg" asChild>
-                  <a href="mailto:diwan.sahilsing@gmail.com">
+                  <a href="https://wa.me/918007192680?text=Hello,%20I'd%20like%20to%20connect%20regarding%20your%20portfolio." target="_blank" rel="noopener noreferrer">
                     <Mail className="w-4 h-4 mr-2" />
                     Send Message
                   </a>
