@@ -338,21 +338,25 @@ const Index = () => {
 
             <div className="max-w-2xl mx-auto">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-                <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-                  <Mail className="w-8 h-8 text-primary mx-auto mb-4" />
-                  <h3 className="font-semibold mb-2">Email</h3>
-                  <a href="mailto:diwan.sahilsing@gmail.com" className="text-muted-foreground hover:text-primary transition-colors">
-                    diwan.sahilsing@gmail.com
-                  </a>
-                </Card>
+                <a href="mailto:diwan.sahilsing@gmail.com" target="_blank" rel="noopener noreferrer" className="block">
+                  <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+                    <Mail className="w-8 h-8 text-primary mx-auto mb-4" />
+                    <h3 className="font-semibold mb-2">Email</h3>
+                    <p className="text-muted-foreground hover:text-primary transition-colors">
+                      diwan.sahilsing@gmail.com
+                    </p>
+                  </Card>
+                </a>
                 
-                <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-                  <Linkedin className="w-8 h-8 text-primary mx-auto mb-4" />
-                  <h3 className="font-semibold mb-2">LinkedIn</h3>
-                  <a href="https://www.linkedin.com/in/diwan-sahil" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                    diwan-sahil
-                  </a>
-                </Card>
+                <a href="https://www.linkedin.com/in/diwan-sahil" target="_blank" rel="noopener noreferrer" className="block">
+                  <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+                    <Linkedin className="w-8 h-8 text-primary mx-auto mb-4" />
+                    <h3 className="font-semibold mb-2">LinkedIn</h3>
+                    <p className="text-muted-foreground hover:text-primary transition-colors">
+                      diwan-sahil
+                    </p>
+                  </Card>
+                </a>
               </div>
 
               <div className="text-center">
