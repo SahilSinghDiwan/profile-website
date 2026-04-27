@@ -2,11 +2,19 @@ import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { Github, ExternalLink, Mail, Linkedin, Moon, Sun, Menu, X } from 'lucide-react';
+import { Github, Mail, Linkedin, Moon, Sun, Menu, X, MessageCircle } from 'lucide-react';
+
+const SKILL_PREVIEW_COUNT = 8;
+const EXPERIENCE_BULLET_PREVIEW_COUNT = 2;
 
 const Index = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+  const isExpanded = (key: string) => Boolean(expanded[key]);
+  const toggleExpanded = (key: string) =>
+    setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -35,62 +43,199 @@ const Index = () => {
     setIsMobileMenuOpen(false);
   };
 
-  // Research-backed project data using effective title formulas
-  //TODO
   const projects = [
     {
-      title: "LLM-Powered Knowledge Assistant",
-      description: "Developed a domain-specific assistant that reduced support ticket resolution time by 70%.",
-      technologies: ["LangChain" , "FAISS" , "Hugging Face models"],
-      impact: "70% faster resolution, $150K annual cost savings",
-      liveDemo: "#",
-      github: "#",
-      category: "Architecture Development"
+      title: "Incident Resolution Assistant",
+      description: "Architected a Python-based microservices platform integrating with ITSM systems to assist SREs. Scaled from a 20-user POC to a production tool supporting 200+ SREs, processing live incident streams.",
+      technologies: ["Python", "Microservices", "Kubernetes", "Helm"],
+      impact: "Scaled POC → production for 200+ SREs",
+      category: "GenAI / Microservices"
     },
     {
-      title: "Optimized LLM Inference API",
-      description: "Built a scalable inference service capable of handling 10K+ daily requests with low latency.",
-      technologies: ["ONNX Runtime", "TensorRT", "FastAPI", "Redis"],
-      impact: "Model quantization, GPU batching, async processing",
-      liveDemo: "#",
-      github: "#",
-      category: "Latency reduced by 45%, 30% infra cost savings"
+      title: "Real-Time Log Analysis Pipeline",
+      description: "Engineered an event-driven pipeline for real-time log fetching, achieving high-accuracy automated root cause identification across live incident streams.",
+      technologies: ["Apache Kafka", "Elasticsearch", "Python"],
+      impact: "90% RCA accuracy, 40–60% MTTR reduction",
+      category: "Performance Optimization"
     },
     {
-      title: "Vector Search Analytics Platform",
-      description: "Designed a real-time analytics dashboard integrated with vector search for semantic queries.",
-      technologies: ["Python", "Milvus", "WebSockets", "D3.js"],
-      impact: "Enabled semantic search + 60% faster data retrieval",
-      liveDemo: "#",
-      github: "#",
+      title: "Hybrid Retrieval System",
+      description: "Designed a hybrid retrieval system to overcome data ambiguity, orchestrating full-stack deployment on Kubernetes using custom Helm charts.",
+      technologies: ["FAISS", "Elasticsearch", "Kubernetes", "Helm"],
+      impact: "Similar-incident recall: 30% → 80%+",
+      category: "Advanced Retrieval"
+    },
+    {
+      title: "Cloud-Native Anomaly Detection",
+      description: "Built and deployed an automated anomaly detection system utilizing Airflow pipelines to process data-center-scale datasets on a Kubernetes cluster.",
+      technologies: ["Apache Airflow", "Kubernetes", "Python"],
+      impact: "Data-center-scale dataset processing",
+      category: "MLOps"
+    },
+    {
+      title: "RAG Chatbot with Live Internet Access",
+      description: "Architected a customized RAG chatbot with live internet access for dynamic data enrichment. Validated through rigorous ground-truth manual testing and deployed on Microsoft Azure.",
+      technologies: ["LangChain", "RAG", "Microsoft Azure", "Python"],
+      impact: "50% better response quality, near-zero hallucination",
       category: "RAG Architecture"
+    },
+    {
+      title: "Multimodal AI Generation",
+      description: "Owned the end-to-end lifecycle for a generative AI solution, successfully fine-tuning an instruct-pix2pix model and managing the final application rollout.",
+      technologies: ["PyTorch", "instruct-pix2pix", "Fine-Tuning"],
+      impact: "Successful fine-tune & production rollout",
+      category: "Multimodal AI"
     }
   ];
 
-  // Research shows skills should be positioned early for scanning priority
   const skills = {
-    "LLM & GenAI": ["Hugging Face Transformers", "Accelerate", "Optimum", "LangChain", "LlamaIndex", "DeepSpeed", "ONNX", "TensorRT"],
-    "Vector Databases & Embeddings": ["FAISS", "Milvus", "Pinecone"],
-    "Backend & Databases": ["Python", "PostgreSQL", "MongoDB", "GraphQL"],
-    "MLOps & Infra": ["Docker", "Kubernetes", "CI/CD", "AWS", "GCP", "Model Monitoring", "Versioning"],
-    "Frontend(Basic)": ["React", "TypeScript", "JavaScript", "Vue.js", "Tailwind CSS"],
+    "Programming & Frameworks": ["Python", "Flask", "FastAPI", "Streamlit", "Gradio"],
+    "AI / GenAI": ["RAG Pipelines", "LLM Integration", "Prompt Engineering", "Model Fine-Tuning", "PyTorch", "LangChain", "Hugging Face Transformers", "Accelerate", "Optimum", "LlamaIndex", "DeepSpeed", "ONNX", "TensorRT"],
+    "Vector Search & Retrieval": ["FAISS", "Milvus", "ChromaDB", "Pinecone", "Elasticsearch"],
+    "Data Engineering": ["Apache Kafka", "Apache Airflow", "Pandas", "NumPy"],
+    "Backend & Integrations": ["Microservices Architecture", "Async Python", "REST APIs", "GraphQL", "Jira / ServiceNow Integrations"],
+    "Cloud & DevOps": ["Docker", "Kubernetes", "AWS", "GCP", "Microsoft Azure", "IBM Cloud", "GitHub Actions", "CI/CD", "Model Monitoring", "Versioning"],
+    "Databases": ["MongoDB", "MySQL", "PostgreSQL"],
+    "Frontend (Basic)": ["React", "TypeScript", "JavaScript", "Vue.js", "Tailwind CSS"],
     "Tools": ["Git", "Vercel", "Supabase", "Jest"]
   };
 
+  const experience = [
+    {
+      role: "Software Engineer - AI",
+      company: "Infobell IT Solutions",
+      location: "Bengaluru, India",
+      period: "March 2024 - Present",
+      bullets: [
+        "Architected a Python-based microservices Incident Resolution Assistant; scaled from a 20-user POC to 200+ SREs in production, processing live incident streams.",
+        "Engineered a Kafka + Elasticsearch event-driven pipeline; 90% accuracy in automated root cause identification, 40–60% MTTR reduction.",
+        "Designed a hybrid retrieval system boosting similar-incident recall from 30% to 80%+; deployed full-stack on Kubernetes with custom Helm charts.",
+        "Built a cloud-native anomaly detection system on Airflow + Kubernetes for data-center-scale datasets.",
+        "Architected a customized RAG chatbot with live internet access; 50% better response quality, near-zero hallucination, deployed on Microsoft Azure.",
+        "Owned end-to-end multimodal AI generative solution; fine-tuned an instruct-pix2pix model and managed the final application rollout."
+      ],
+      tech: ["Python", "RAG", "LangChain", "Kafka", "Elasticsearch", "FAISS", "Kubernetes", "Helm", "Airflow", "Microsoft Azure", "PyTorch"]
+    },
+    {
+      role: "Master Trainer - AI & Python",
+      company: "India STEM Foundation",
+      location: "Remote & On-site, India",
+      period: "August 2022 - August 2023",
+      bullets: [
+        "Led Python and Artificial Intelligence training programs for an international student base across the USA, UK, Singapore, and India.",
+        "Designed hands-on hardware/software integration curricula focused on robotics with Python, C, Raspberry Pi, and Arduino.",
+        "Mentored students through end-to-end technical projects, translating complex software concepts into accessible learning modules."
+      ],
+      tech: ["Python", "AI/ML", "C", "Raspberry Pi", "Arduino", "Robotics"]
+    },
+    {
+      role: "Junior Software Developer",
+      company: "Koderoom",
+      location: "Bengaluru, India",
+      period: "June 2020 - June 2022",
+      bullets: [
+        "Developed core backend features for a legal contract management platform handling complex documents for legal cases.",
+        "Built and maintained backend APIs supporting document parsing, data structuring, and secure retrieval of sensitive legal contracts.",
+        "Collaborated with cross-functional teams to streamline platform performance and ensure reliable document processing workflows."
+      ],
+      tech: ["Python", "REST APIs", "Backend", "Document Parsing"]
+    }
+  ];
+
+  const education = [
+    {
+      institution: "Centre for Development of Advanced Computing (C-DAC)",
+      degree: "Post Graduate Training Program",
+      duration: "6 Months",
+      location: "India",
+      period: "Sep 2023 - Feb 2024",
+      tags: ["Advanced Computing", "AI/ML"]
+    },
+    {
+      institution: "G H Raisoni Academy of Engineering and Technology",
+      degree: "Post Graduate Diploma in Industrial Robotics",
+      duration: "Diploma",
+      location: "Nagpur, India",
+      period: "2019 - Feb 2022",
+      tags: ["Robotics", "Automation", "Industrial Systems"]
+    },
+    {
+      institution: "G H Raisoni Academy of Engineering and Technology",
+      degree: "Bachelor of Engineering, Mechanical Engineering",
+      duration: "B.E.",
+      location: "Nagpur, India",
+      period: "2014 - 2018",
+      tags: ["Mechanical Engineering", "Manufacturing"]
+    }
+  ];
+
+  const credentials = [
+    {
+      type: "Certification",
+      name: "IBM Cloud Advocate Essentials",
+      issuer: "IBM",
+      detailLabel: "Issued",
+      detail: "December 2025",
+      tags: ["Cloud", "IBM Cloud"]
+    },
+    {
+      type: "Publication",
+      name: "Hexapod Robot — Design & Mechanics",
+      issuer: "IEEE",
+      detailLabel: "Published",
+      detail: "2019",
+      tags: ["Robotics", "Research", "IEEE"]
+    }
+  ];
+
+  const contacts = [
+    {
+      type: "Direct",
+      label: "Email",
+      description: "Best for project inquiries, collaboration, and detailed discussions.",
+      detailLabel: "Reach me at",
+      detail: "diwan.sahilsingh@gmail.com",
+      href: "mailto:diwan.sahilsingh@gmail.com",
+      tags: ["Async", "Detailed"],
+      icon: Mail
+    },
+    {
+      type: "Network",
+      label: "LinkedIn",
+      description: "Connect for career opportunities, professional networking, and updates.",
+      detailLabel: "Profile",
+      detail: "linkedin.com/in/diwan-sahil",
+      href: "https://www.linkedin.com/in/diwan-sahil",
+      tags: ["Professional", "Networking"],
+      icon: Linkedin
+    },
+    {
+      type: "Instant",
+      label: "WhatsApp",
+      description: "Quickest way to reach me for short questions or scheduling a call.",
+      detailLabel: "Message",
+      detail: "+91 800-7192-680",
+      href: "https://wa.me/918007192680?text=Hello,%20I'd%20like%20to%20connect%20regarding%20your%20portfolio.",
+      tags: ["Real-time", "Quick"],
+      icon: MessageCircle
+    }
+  ];
+
   return (
     <div className={`min-h-screen bg-background text-foreground transition-colors duration-300`}>
-        {/* Navigation - Research shows clear nav is scanned first */}
+        {/* Navigation */}
         <nav className="fixed top-0 w-full bg-background/80 backdrop-blur-md border-b z-50">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
-              <div className="font-bold text-xl">Sahil Singh Diwan</div>
-              
+              <div className="font-semibold text-lg tracking-tight">Sahil Singh Diwan</div>
+
               {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center space-x-8">
+              <div className="hidden md:flex items-center gap-6">
                 <button onClick={() => scrollToSection('about')} className="hover:text-primary transition-colors">About</button>
-                <button onClick={() => scrollToSection('projects')} className="hover:text-primary transition-colors">Projects</button>
                 <button onClick={() => scrollToSection('skills')} className="hover:text-primary transition-colors">Skills</button>
+                <button onClick={() => scrollToSection('projects')} className="hover:text-primary transition-colors">Projects</button>
                 <button onClick={() => scrollToSection('experience')} className="hover:text-primary transition-colors">Experience</button>
+                <button onClick={() => scrollToSection('education')} className="hover:text-primary transition-colors">Education</button>
                 <button onClick={() => scrollToSection('contact')} className="hover:text-primary transition-colors">Contact</button>
                 <Button variant="ghost" size="sm" onClick={toggleTheme}>
                   {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -98,7 +243,7 @@ const Index = () => {
               </div>
 
               {/* Mobile Navigation */}
-              <div className="md:hidden flex items-center space-x-2">
+              <div className="md:hidden flex items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={toggleTheme}>
                   {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 </Button>
@@ -111,11 +256,12 @@ const Index = () => {
             {/* Mobile Menu */}
             {isMobileMenuOpen && (
               <div className="md:hidden py-4 border-t">
-                <div className="flex flex-col space-y-2">
+                <div className="flex flex-col gap-3">
                   <button onClick={() => scrollToSection('about')} className="text-left py-2 hover:text-primary transition-colors">About</button>
-                  <button onClick={() => scrollToSection('projects')} className="text-left py-2 hover:text-primary transition-colors">Projects</button>
                   <button onClick={() => scrollToSection('skills')} className="text-left py-2 hover:text-primary transition-colors">Skills</button>
+                  <button onClick={() => scrollToSection('projects')} className="text-left py-2 hover:text-primary transition-colors">Projects</button>
                   <button onClick={() => scrollToSection('experience')} className="text-left py-2 hover:text-primary transition-colors">Experience</button>
+                  <button onClick={() => scrollToSection('education')} className="text-left py-2 hover:text-primary transition-colors">Education</button>
                   <button onClick={() => scrollToSection('contact')} className="text-left py-2 hover:text-primary transition-colors">Contact</button>
                 </div>
               </div>
@@ -123,19 +269,20 @@ const Index = () => {
           </div>
         </nav>
 
-        {/* Hero Section - Optimized for 15-second scan */}
-        <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+        {/* Hero Section */}
+        <section className="pt-40 pb-24 md:pt-48 md:pb-32 px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              {/* Clear, keyword-rich H1 - Research shows this is scanned first */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-                AI Engineer 
-                <span className="block text-primary text-2xl">Specializing in Python</span>
+            <div className="text-center max-w-3xl mx-auto">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-5">
+                AI / GenAI Engineer
               </h1>
-              
-              {/* Concise personal brand statement - Research shows this is critical */}
-              <p className="text-xl sm:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
-                AI Engineer specializing in LLM inference, Backend Systems & Scalable GenAI Applications
+
+              <p className="text-xl sm:text-2xl text-primary font-medium tracking-tight mb-8">
+                Architecting end-to-end AI solutions
+              </p>
+
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-10">
+                5+ years building RAG pipelines, scalable microservices, and production-grade GenAI systems with vector databases, Kafka, Airflow, and Kubernetes.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -150,60 +297,143 @@ const Index = () => {
           </div>
         </section>
 
-        {/* About Section - Brief and scannable */}
-        <section id="about" className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/30">
+        {/* About Section */}
+        <section id="about" className="scroll-mt-24 py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-muted/30">
           <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4">About Me</h2>
-              <div className="w-20 h-1 bg-primary mx-auto mb-8"></div>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-5">About Me</h2>
+              <div className="w-16 h-0.5 bg-primary mx-auto"></div>
             </div>
-            
-            <div className="max-w-4xl mx-auto">
-              <p className="text-lg leading-relaxed mb-6">
-                With 4+ years of experience in Python and backend engineering, I focus on building advanced AI and GenAI solutions that are production-ready and impactful. My work spans from intelligent NLP-driven chatbots to optimized LLM inference pipelines and scalable backend systems for real-world deployment.
+
+            <div className="max-w-3xl mx-auto">
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-6">
+                Dynamic AI / GenAI Engineer with 5 years of software development and AI experience, specializing in architecting and deploying end-to-end AI solutions. I've scaled GenAI products from POC to production, built advanced RAG pipelines, and deployed containerized microservices for high-availability, low-latency enterprise applications.
               </p>
-              <p className="text-lg leading-relaxed mb-8">
-                I emphasize clean, maintainable code and measurable results. For example, I've engineered systems that reduced incident resolution research time from hours to minutes, and optimized inference latency to cut costs while boosting throughput. My goal is always to translate technical solutions into tangible business value.
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-10">
+                I work fluently with vector databases (FAISS, Milvus, ChromaDB), distributed messaging (Kafka), and orchestration tools (Kubernetes, Airflow). My focus: clean, maintainable code that translates technical solutions into measurable business value — reduced MTTR, better recall, fewer hallucinations.
               </p>
-              
-              {/* Quick stats for immediate impact */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 text-center">
                 <div className="p-4">
-                  <div className="text-3xl font-bold text-primary mb-2">4+</div>
+                  <div className="text-3xl font-bold tracking-tight text-primary mb-2 tabular-nums">5+</div>
                   <div className="text-muted-foreground">Years Experience</div>
                 </div>
                 <div className="p-4">
-                  <div className="text-3xl font-bold text-primary mb-2">10+</div>
-                  <div className="text-muted-foreground">Corporate Projects Completed</div>
+                  <div className="text-3xl font-bold tracking-tight text-primary mb-2 tabular-nums">10+</div>
+                  <div className="text-muted-foreground">Corporate Projects</div>
                 </div>
                 <div className="p-4">
-                  <div className="text-3xl font-bold text-primary mb-2">99.9%</div>
+                  <div className="text-3xl font-bold tracking-tight text-primary mb-2 tabular-nums">99.9%</div>
                   <div className="text-muted-foreground">Uptime Achieved</div>
+                </div>
+                <div className="p-4">
+                  <div className="text-3xl font-bold tracking-tight text-primary mb-2 tabular-nums">40–60%</div>
+                  <div className="text-muted-foreground">MTTR Reduction</div>
+                </div>
+                <div className="p-4">
+                  <div className="text-3xl font-bold tracking-tight text-primary mb-2 tabular-nums">200+</div>
+                  <div className="text-muted-foreground">SREs Supported</div>
+                </div>
+                <div className="p-4">
+                  <div className="text-3xl font-bold tracking-tight text-primary mb-2 tabular-nums">90%</div>
+                  <div className="text-muted-foreground">RCA Accuracy</div>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Skills Section - Positioned early per research findings */}
-        <section id="skills" className="py-16 px-4 sm:px-6 lg:px-8">
+        {/* Skills Section */}
+        <section id="skills" className="scroll-mt-24 py-20 md:py-24 px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4">Skills & Technologies</h2>
-              <div className="w-20 h-1 bg-primary mx-auto mb-8"></div>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-5">Skills & Technologies</h2>
+              <div className="w-16 h-0.5 bg-primary mx-auto"></div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {Object.entries(skills).map(([category, skillList]) => (
-                <Card key={category} className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+              {Object.entries(skills).map(([category, skillList]) => {
+                const key = `skill-${category}`;
+                const open = isExpanded(key);
+                const visibleSkills = open
+                  ? skillList
+                  : skillList.slice(0, SKILL_PREVIEW_COUNT);
+                const hiddenCount = skillList.length - SKILL_PREVIEW_COUNT;
+                const hasMore = hiddenCount > 0;
+                return (
+                  <Card key={category} className="h-full flex flex-col">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <Badge variant="outline" className="text-xs">
+                          {skillList.length} skills
+                        </Badge>
+                      </div>
+                      <CardTitle className="text-lg leading-tight mb-3">{category}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1 flex flex-col justify-between">
+                      <div className="flex flex-wrap gap-2">
+                        {visibleSkills.map((skill) => (
+                          <Badge key={skill} variant="secondary" className="text-xs">
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
+                      {hasMore && (
+                        <button
+                          type="button"
+                          onClick={() => toggleExpanded(key)}
+                          className="mt-3 self-start text-xs font-medium text-primary hover:underline"
+                          aria-expanded={open}
+                        >
+                          {open ? 'Show less' : `+${hiddenCount} more`}
+                        </button>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Projects Section */}
+        <section id="projects" className="scroll-mt-24 py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-muted/30">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-5">Featured Projects</h2>
+              <div className="w-16 h-0.5 bg-primary mx-auto"></div>
+              <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                Selected projects demonstrating end-to-end ownership and measurable business impact. Source links omitted as these are proprietary client deployments.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+              {projects.map((project, index) => (
+                <Card key={index} className="h-full flex flex-col">
                   <CardHeader className="pb-4">
-                    <CardTitle className="text-xl">{category}</CardTitle>
+                    <div className="flex items-start justify-between mb-2">
+                      <Badge variant="outline" className="text-xs">
+                        {project.category}
+                      </Badge>
+                    </div>
+                    <CardTitle className="text-lg leading-tight mb-3">
+                      {project.title}
+                    </CardTitle>
+                    <CardDescription className="text-sm leading-relaxed">
+                      {project.description}
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent className="pt-0">
+
+                  <CardContent className="flex-1 flex flex-col justify-between">
+                    <div className="mb-4 p-3 bg-primary/10 rounded-lg">
+                      <div className="text-sm font-medium text-primary mb-1">Impact</div>
+                      <div className="text-sm">{project.impact}</div>
+                    </div>
+
                     <div className="flex flex-wrap gap-2">
-                      {skillList.map((skill) => (
-                        <Badge key={skill} variant="secondary" className="text-sm">
-                          {skill}
+                      {project.technologies.map((tech) => (
+                        <Badge key={tech} variant="secondary" className="text-xs">
+                          {tech}
                         </Badge>
                       ))}
                     </div>
@@ -214,67 +444,126 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Projects Section - Using research-backed title formulas */}
-        <section id="projects" className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/30">
+        {/* Experience Section */}
+        <section id="experience" className="scroll-mt-24 py-20 md:py-24 px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4">Featured Projects</h2>
-              <div className="w-20 h-1 bg-primary mx-auto mb-8"></div>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Here are some of my recent projects that demonstrate problem-solving skills and technical expertise with measurable results.
-              </p>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-5">Work Experience</h2>
+              <div className="w-16 h-0.5 bg-primary mx-auto"></div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-              {projects.map((project, index) => (
-                <Card key={index} className="group hover:shadow-lg transition-all duration-300 h-full flex flex-col">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <Badge variant="outline" className="text-xs">
-                        {project.category}
-                      </Badge>
-                    </div>
-                    {/* Research-backed title format: Action-Result-Technology */}
-                    <CardTitle className="text-lg leading-tight mb-3 group-hover:text-primary transition-colors">
-                      {project.title}
-                    </CardTitle>
-                    <CardDescription className="text-sm leading-relaxed">
-                      {project.description}
-                    </CardDescription>
-                  </CardHeader>
-                  
-                  <CardContent className="flex-1 flex flex-col justify-between">
-                    <div className="mb-4">
-                      {/* Quantifiable impact - Research shows this is crucial */}
-                      <div className="mb-4 p-3 bg-primary/10 rounded-lg">
-                        <div className="text-sm font-medium text-primary mb-1">Impact</div>
-                        <div className="text-sm">{project.impact}</div>
+              {experience.map((job, idx) => {
+                const key = `exp-${idx}`;
+                const open = isExpanded(key);
+                const visibleBullets = open
+                  ? job.bullets
+                  : job.bullets.slice(0, EXPERIENCE_BULLET_PREVIEW_COUNT);
+                const hiddenCount = job.bullets.length - EXPERIENCE_BULLET_PREVIEW_COUNT;
+                const hasMore = hiddenCount > 0;
+                return (
+                  <Card key={idx} className="h-full flex flex-col">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <Badge variant="outline" className="text-xs">{job.period}</Badge>
                       </div>
-                      
-                      {/* Technology stack */}
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {project.technologies.map((tech) => (
-                          <Badge key={tech} variant="secondary" className="text-xs">
-                            {tech}
-                          </Badge>
+                      <CardTitle className="text-lg leading-tight mb-3">{job.role}</CardTitle>
+                      <CardDescription className="text-sm leading-relaxed">
+                        {job.company} · {job.location}
+                      </CardDescription>
+                    </CardHeader>
+
+                    <CardContent className="flex-1 flex flex-col justify-between">
+                      <div className="mb-4 p-3 bg-primary/10 rounded-lg">
+                        <div className="text-sm font-medium text-primary mb-2">Highlights</div>
+                        <ul className="text-sm space-y-1.5">
+                          {visibleBullets.map((b, bi) => (
+                            <li key={bi}>• {b}</li>
+                          ))}
+                        </ul>
+                        {hasMore && (
+                          <button
+                            type="button"
+                            onClick={() => toggleExpanded(key)}
+                            className="mt-3 text-xs font-medium text-primary hover:underline"
+                            aria-expanded={open}
+                          >
+                            {open ? 'Show less' : `Show ${hiddenCount} more highlight${hiddenCount === 1 ? '' : 's'}`}
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        {job.tech.map((t) => (
+                          <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>
                         ))}
                       </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Education & Certifications Section */}
+        <section id="education" className="scroll-mt-24 py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-muted/30">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-5">Education & Certifications</h2>
+              <div className="w-16 h-0.5 bg-primary mx-auto"></div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+              {education.map((edu, idx) => (
+                <Card key={`edu-${idx}`} className="h-full flex flex-col">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <Badge variant="outline" className="text-xs">{edu.period}</Badge>
+                    </div>
+                    <CardTitle className="text-lg leading-tight mb-3">{edu.degree}</CardTitle>
+                    <CardDescription className="text-sm leading-relaxed">
+                      {edu.institution}
+                    </CardDescription>
+                  </CardHeader>
+
+                  <CardContent className="flex-1 flex flex-col justify-between">
+                    <div className="mb-4 p-3 bg-primary/10 rounded-lg">
+                      <div className="text-sm font-medium text-primary mb-1">{edu.duration}</div>
+                      <div className="text-sm">{edu.location}</div>
                     </div>
 
-                    {/* Links to live demo and source code */}
-                    <div className="flex gap-3">
-                      <Button variant="outline" size="sm" className="flex-1" asChild>
-                        <a href={project.liveDemo} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Live Demo
-                        </a>
-                      </Button>
-                      <Button variant="outline" size="sm" className="flex-1" asChild>
-                        <a href={project.github} target="_blank" rel="noopener noreferrer">
-                          <Github className="w-4 h-4 mr-2" />
-                          Code
-                        </a>
-                      </Button>
+                    <div className="flex flex-wrap gap-2">
+                      {edu.tags.map((t) => (
+                        <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+
+              {credentials.map((c, idx) => (
+                <Card key={`cred-${idx}`} className="h-full flex flex-col">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <Badge variant="outline" className="text-xs">{c.type}</Badge>
+                    </div>
+                    <CardTitle className="text-lg leading-tight mb-3">{c.name}</CardTitle>
+                    <CardDescription className="text-sm leading-relaxed">
+                      {c.issuer}
+                    </CardDescription>
+                  </CardHeader>
+
+                  <CardContent className="flex-1 flex flex-col justify-between">
+                    <div className="mb-4 p-3 bg-primary/10 rounded-lg">
+                      <div className="text-sm font-medium text-primary mb-1">{c.detailLabel}</div>
+                      <div className="text-sm">{c.detail}</div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {c.tags.map((t) => (
+                        <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
@@ -283,90 +572,44 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Experience Section */}
-        <section id="experience" className="py-16 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4">Work Experience</h2>
-              <div className="w-20 h-1 bg-primary mx-auto mb-8"></div>
-            </div>
-
-            <div className="max-w-4xl mx-auto space-y-8">
-              <Card className="p-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-                  <div>
-                    <h3 className="text-xl font-semibold">Senior Full-Stack Developer</h3>
-                    <p className="text-primary font-medium">TechCorp Solutions</p>
-                  </div>
-                  <Badge variant="outline">2022 - Present</Badge>
-                </div>
-                <ul className="space-y-2 text-muted-foreground">
-                  <li>• Led development of e-commerce platform serving 100K+ users, reducing load times by 40%</li>
-                  <li>• Implemented secure payment processing system handling $2M+ monthly transactions</li>
-                  <li>• Mentored 3 junior developers and established code review best practices</li>
-                </ul>
-              </Card>
-
-              <Card className="p-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-                  <div>
-                    <h3 className="text-xl font-semibold">Full-Stack Developer</h3>
-                    <p className="text-primary font-medium">StartupXYZ</p>
-                  </div>
-                  <Badge variant="outline">2020 - 2022</Badge>
-                </div>
-                <ul className="space-y-2 text-muted-foreground">
-                  <li>• Built real-time analytics dashboard improving data visualization performance by 60%</li>
-                  <li>• Developed authentication system reducing login time by 25%</li>
-                  <li>• Collaborated with design team to implement responsive UI components</li>
-                </ul>
-              </Card>
-            </div>
-          </div>
-        </section>
-
         {/* Contact Section */}
-        <section id="contact" className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/30">
+        <section id="contact" className="scroll-mt-24 py-20 md:py-24 px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4">Get In Touch</h2>
-              <div className="w-20 h-1 bg-primary mx-auto mb-8"></div>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-5">Get In Touch</h2>
+              <div className="w-16 h-0.5 bg-primary mx-auto"></div>
+              <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 I'm always interested in new opportunities and exciting projects. Let's discuss how we can work together.
               </p>
             </div>
 
-            <div className="max-w-2xl mx-auto">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-                <a href="mailto:diwan.sahilsing@gmail.com" target="_blank" rel="noopener noreferrer" className="block">
-                  <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-                    <Mail className="w-8 h-8 text-primary mx-auto mb-4" />
-                    <h3 className="font-semibold mb-2">Email</h3>
-                    <p className="text-muted-foreground hover:text-primary transition-colors">
-                      diwan.sahilsing@gmail.com
-                    </p>
-                  </Card>
-                </a>
-                
-                <a href="https://www.linkedin.com/in/diwan-sahil" target="_blank" rel="noopener noreferrer" className="block">
-                  <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-                    <Linkedin className="w-8 h-8 text-primary mx-auto mb-4" />
-                    <h3 className="font-semibold mb-2">LinkedIn</h3>
-                    <p className="text-muted-foreground hover:text-primary transition-colors">
-                      diwan-sahil
-                    </p>
-                  </Card>
-                </a>
-              </div>
-
-              <div className="text-center">
-                <Button size="lg" asChild>
-                  <a href="https://wa.me/918007192680?text=Hello,%20I'd%20like%20to%20connect%20regarding%20your%20portfolio." target="_blank" rel="noopener noreferrer">
-                    <Mail className="w-4 h-4 mr-2" />
-                    Send Message
+            <div className="flex flex-wrap justify-center items-center gap-10 sm:gap-14">
+              {contacts.map((c, idx) => {
+                const Icon = c.icon;
+                return (
+                  <a
+                    key={idx}
+                    href={c.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${c.label} — ${c.detail}`}
+                    title={c.detail}
+                    className="group flex flex-col items-center text-center"
+                  >
+                    <div className="flex flex-shrink-0 items-center justify-center w-16 h-16 aspect-square rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+                      <Icon className="w-7 h-7" />
+                    </div>
+                    <div className="mt-3 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-300">
+                      <div className="text-sm font-medium text-primary">
+                        {c.label}
+                      </div>
+                      <div className="text-xs text-muted-foreground break-all">
+                        {c.detail}
+                      </div>
+                    </div>
                   </a>
-                </Button>
-              </div>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -376,16 +619,16 @@ const Index = () => {
           <div className="max-w-6xl mx-auto">
             <div className="flex flex-col sm:flex-row justify-between items-center">
               <div className="text-muted-foreground mb-4 sm:mb-0">
-                © 2025 Sahil Singh Diwan. All rights reserved.
+                © 2026 Sahil Singh Diwan. All rights reserved.
               </div>
-              <div className="flex space-x-4">
+              <div className="flex gap-4">
                 <a href="https://github.com/SahilSinghDiwan" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                   <Github className="w-5 h-5" />
                 </a>
                 <a href="https://www.linkedin.com/in/diwan-sahil/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                   <Linkedin className="w-5 h-5" />
                 </a>
-                <a href="mailto:diwan.sahilsing@gmail.com" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="mailto:diwan.sahilsingh@gmail.com" className="text-muted-foreground hover:text-primary transition-colors">
                   <Mail className="w-5 h-5" />
                 </a>
               </div>
