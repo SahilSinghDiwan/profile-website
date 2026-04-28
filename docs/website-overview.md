@@ -238,3 +238,87 @@ npm run build    # production build (tsc -b && vite build)
 npm run preview  # preview built bundle
 npm run lint     # eslint
 ```
+
+Preferred dev workflow is **Docker** (a long-running container named `profile-website-dev` is bind-mounted to the repo and runs `npm run dev`). Avoid `docker exec` for one-off type/lint checks if it would kill the dev container — use a separate `docker run` instead.
+
+---
+
+## Conversation Handoff Notes (for resuming with another model)
+
+These are the gotchas and decisions accumulated across earlier sessions. Read this before making changes.
+
+### CRITICAL: `src/index.css` is precompiled Tailwind — NOT a source file
+
+- `src/index.css` (~2533 lines) is precompiled Tailwind v3 output. It contains **only the utilities that were generated when it was built** — many common Tailwind classes are missing.
+- `vite.config.ts` does **not** register the Tailwind v4 vite plugin, even though `@tailwindcss/vite` and `tailwindcss` v4 are in `package.json`. So adding new utility classes in JSX will **silently no-op** if those classes aren't already in `index.css`.
+- The workaround in use: `src/typography.css` (loaded after `index.css` in `src/main.tsx`) holds the Inter font setup **plus shim CSS rules for any utility class needed by JSX that's missing from `index.css`**.
+
+**Confirmed-missing utilities that have been shimmed into `typography.css`** (do not assume Tailwind classes work — grep `src/index.css` first, and if missing, add a plain CSS rule to `typography.css`):
+
+```
+pt-32 pt-40 pt-48 pb-24 pb-32 py-20 py-24
+mb-5 mb-10 mt-3 mt-6
+tabular-nums w-16 flex-shrink-0 gap-10 gap-14
+md:pt-40 md:pt-48 md:pb-24 md:pb-32 md:py-20 md:py-24 md:mb-10 md:mt-6
+group-focus-visible:opacity-100
+section[id] { scroll-margin-top: 4rem }
+```
+
+If you add a class in JSX and the visual change doesn't appear:
+1. `Grep` for `\.<classname>` in `src/index.css`. If absent → add to `typography.css`.
+2. For `md:` variants, wrap inside `@media (min-width: 768px) { .md\:<class> { ... } }`.
+
+### Header / section overlap
+
+Nav is `fixed`, `h-16` (4rem). To make section tops sit flush against the header bottom on click-scroll, `typography.css` sets `section[id] { scroll-margin-top: 4rem }`. Don't change this to 6rem — the user explicitly wants no visible gap.
+
+### Hero padding
+
+Hero `<section>` uses `pt-40 pb-24 md:pt-48 md:pb-32`. These are shimmed in `typography.css`. If the H1 ever appears under the nav again, check that those shim rules still exist.
+
+### Get In Touch — current design
+
+Replaced earlier 3-column card grid with a centered row of circular icon buttons:
+
+```jsx
+<div className="flex flex-wrap justify-center items-center gap-10 sm:gap-14">
+  {contacts.map((c) => (
+    <a className="group flex flex-col items-center text-center" ...>
+      <div className="flex flex-shrink-0 items-center justify-center w-16 h-16 aspect-square rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+        <Icon className="w-7 h-7" />
+      </div>
+      <div className="mt-3 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-300">
+        <div className="text-sm font-medium text-primary">{c.label}</div>
+        <div className="text-xs text-muted-foreground break-all">{c.detail}</div>
+      </div>
+    </a>
+  ))}
+</div>
+```
+
+Label/detail under each icon is **hidden by default** and fades in on hover or keyboard focus. **Don't** revert to cards or to always-visible labels — both have been explicitly rejected.
+
+### Spacing rule the user explicitly enforced
+
+Use `gap-*` for nav and inline groups, **not** `space-x-*` / `space-y-*`. Past attempts with `space-x-6` rendered with no spacing in this precompiled CSS. Current nav uses `gap-6` desktop, `gap-3` mobile column, `gap-2` mobile actions, footer `gap-4`.
+
+### User feedback recorded so far
+
+- Email is `diwan.sahilsingh@gmail.com` — the `h` is mandatory (a missing-`h` typo existed earlier).
+- Project cards must be **non-interactive** (no live demo / code links) because all current projects are proprietary client deployments. Company names belong in Experience, **not** in project titles/descriptions.
+- All sections use the **same Featured-Projects card template** (see Unified Card Template table above).
+- Oversized cards (Experience bullets, Skills) **truncate with click-to-expand**, not hover.
+- Browser tab title must be professional — currently `"Sahil Singh Diwan — AI / GenAI Engineer"`.
+- Typography must be "professional and homogenous" — Inter font, tightened heading letter-spacing, generous line-height (~1.65 body, ~1.7 paragraphs). Lives in `typography.css`.
+
+### Last commit on `main`
+
+`9d2d27c feat: Refresh website with resume content, typography polish, and contact icons` — pushed to `origin/main`. The repo is otherwise clean.
+
+### Files to read first when resuming
+
+1. `src/pages/Index.tsx` — single page, all sections + content data live here.
+2. `src/typography.css` — font + ALL shim utilities. Always check this before touching layout.
+3. `src/index.css` — precompiled Tailwind; treat as read-only reference for what classes already exist.
+4. `index.html` — title, meta, Inter font preconnect.
+5. This file (`docs/website-overview.md`).

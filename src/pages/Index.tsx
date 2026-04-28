@@ -274,7 +274,9 @@ const Index = () => {
           <div className="max-w-6xl mx-auto">
             <div className="text-center max-w-3xl mx-auto">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-5">
-                AI / GenAI Engineer
+                Sahil Diwan
+                <br />
+                <span className="text-3xl sm:text-4xl lg:text-5xl">AI / Gen AI Engineer</span>
               </h1>
 
               <p className="text-xl sm:text-2xl text-primary font-medium tracking-tight mb-8">
