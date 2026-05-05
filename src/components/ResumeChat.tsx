@@ -203,6 +203,11 @@ export function ResumeChat({ getTurnstileToken: externalGetToken }: ResumeChatPr
 
           {/* Input area */}
           <div className="border-t border-gray-200 p-4 dark:border-gray-800">
+            {!externalGetToken && !TURNSTILE_SITE_KEY && (
+              <div className="mb-2 rounded-md bg-amber-50 p-2 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                Chat is unavailable: VITE_TURNSTILE_SITE_KEY is missing from the build environment.
+              </div>
+            )}
             {turnstileRequired && (
               <div className="mb-2 flex flex-col items-center gap-1">
                 <div ref={turnstileContainerRef} />
