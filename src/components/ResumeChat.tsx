@@ -12,18 +12,75 @@ const SUGGESTED_QUESTIONS = [
   "What technologies does Sahil specialize in?",
 ];
 
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "";
+const TURNSTILE_SCRIPT_SRC = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (
+        el: HTMLElement,
+        opts: { sitekey: string; callback: (token: string) => void; "error-callback"?: () => void; "expired-callback"?: () => void; theme?: "light" | "dark" | "auto" }
+      ) => string;
+      remove: (id: string) => void;
+      reset: (id?: string) => void;
+    };
+  }
+}
+
 interface ResumeChatProps {
   getTurnstileToken?: () => string;
 }
 
-export function ResumeChat({ getTurnstileToken }: ResumeChatProps) {
+export function ResumeChat({ getTurnstileToken: externalGetToken }: ResumeChatProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [countdown, setCountdown] = useState(0);
+  const [turnstileToken, setTurnstileToken] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const turnstileContainerRef = useRef<HTMLDivElement>(null);
+  const turnstileWidgetIdRef = useRef<string | null>(null);
+  const tokenRef = useRef("");
+  tokenRef.current = turnstileToken;
+
+  const getToken = externalGetToken ?? (() => tokenRef.current);
   const { message, error, isLoading, retryAfter, sendMessage, reset } = useChat({
-    getTurnstileToken,
+    getTurnstileToken: getToken,
   });
+
+  // Load Turnstile script + render widget when the chat panel opens
+  useEffect(() => {
+    if (!isOpen || !TURNSTILE_SITE_KEY || externalGetToken) return;
+
+    const renderWidget = () => {
+      if (!window.turnstile || !turnstileContainerRef.current || turnstileWidgetIdRef.current) return;
+      turnstileWidgetIdRef.current = window.turnstile.render(turnstileContainerRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        callback: (token: string) => setTurnstileToken(token),
+        "expired-callback": () => setTurnstileToken(""),
+        "error-callback": () => setTurnstileToken(""),
+        theme: "auto",
+      });
+    };
+
+    if (window.turnstile) {
+      renderWidget();
+      return;
+    }
+
+    const existing = document.querySelector<HTMLScriptElement>(`script[src="${TURNSTILE_SCRIPT_SRC}"]`);
+    if (existing) {
+      existing.addEventListener("load", renderWidget, { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = TURNSTILE_SCRIPT_SRC;
+    script.async = true;
+    script.defer = true;
+    script.addEventListener("load", renderWidget, { once: true });
+    document.head.appendChild(script);
+  }, [isOpen, externalGetToken]);
 
   // Scroll to bottom when message updates
   useEffect(() => {
@@ -62,6 +119,11 @@ export function ResumeChat({ getTurnstileToken }: ResumeChatProps) {
   const handleClose = () => {
     setIsOpen(false);
     reset();
+    if (turnstileWidgetIdRef.current && window.turnstile) {
+      window.turnstile.remove(turnstileWidgetIdRef.current);
+      turnstileWidgetIdRef.current = null;
+    }
+    setTurnstileToken("");
   };
 
   const showSuggestions = !message && !error;
@@ -135,6 +197,11 @@ export function ResumeChat({ getTurnstileToken }: ResumeChatProps) {
 
           {/* Input area */}
           <div className="border-t border-gray-200 p-4 dark:border-gray-800">
+            {TURNSTILE_SITE_KEY && !externalGetToken && (
+              <div className="mb-2 flex justify-center">
+                <div ref={turnstileContainerRef} />
+              </div>
+            )}
             <div className="flex gap-2">
               <Input
                 placeholder="Ask about Sahil's experience..."
@@ -151,7 +218,7 @@ export function ResumeChat({ getTurnstileToken }: ResumeChatProps) {
               />
               <Button
                 onClick={() => handleSendMessage(inputValue)}
-                disabled={isLoading || !inputValue.trim()}
+                disabled={isLoading || !inputValue.trim() || (!!TURNSTILE_SITE_KEY && !externalGetToken && !turnstileToken)}
                 size="icon"
                 aria-label="Send message"
               >
