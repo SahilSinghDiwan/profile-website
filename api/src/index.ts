@@ -17,9 +17,15 @@ const json = (data: unknown, init: ResponseInit = {}): Response =>
     headers: { "Content-Type": "application/json", ...(init.headers ?? {}) },
   });
 
-function corsHeaders(origin: string): Record<string, string> {
+function pickAllowedOrigin(allowed: string, requestOrigin: string | null): string {
+  const list = allowed.split(",").map(s => s.trim()).filter(Boolean);
+  if (requestOrigin && list.includes(requestOrigin)) return requestOrigin;
+  return list[0] ?? "";
+}
+
+function corsHeaders(allowed: string, requestOrigin: string | null): Record<string, string> {
   return {
-    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Origin": pickAllowedOrigin(allowed, requestOrigin),
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Max-Age": "86400",
@@ -27,9 +33,9 @@ function corsHeaders(origin: string): Record<string, string> {
   };
 }
 
-function withCors(res: Response, env: Env): Response {
+function withCors(res: Response, env: Env, requestOrigin: string | null): Response {
   const headers = new Headers(res.headers);
-  for (const [k, v] of Object.entries(corsHeaders(env.PORTFOLIO_ORIGIN))) {
+  for (const [k, v] of Object.entries(corsHeaders(env.PORTFOLIO_ORIGIN, requestOrigin))) {
     headers.set(k, v);
   }
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
@@ -38,28 +44,29 @@ function withCors(res: Response, env: Env): Response {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    const reqOrigin = request.headers.get("Origin");
 
     if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: corsHeaders(env.PORTFOLIO_ORIGIN) });
+      return new Response(null, { status: 204, headers: corsHeaders(env.PORTFOLIO_ORIGIN, reqOrigin) });
     }
 
     if (url.pathname === "/healthz" && request.method === "GET") {
-      return withCors(json({ ok: true }), env);
+      return withCors(json({ ok: true }), env, reqOrigin);
     }
 
     if (url.pathname === "/api/github/repos" && request.method === "GET") {
-      return withCors(await handleGithubRepos(request, env), env);
+      return withCors(await handleGithubRepos(request, env), env, reqOrigin);
     }
 
     if (url.pathname === "/api/chat" && request.method === "POST") {
-      return withCors(await handleChat(request, env), env);
+      return withCors(await handleChat(request, env), env, reqOrigin);
     }
 
     const projectSummaryMatch = url.pathname.match(/^\/api\/projects\/([^/]+)\/summary$/);
     if (projectSummaryMatch && request.method === "GET") {
-      return withCors(await handleProjectSummary(request, env, projectSummaryMatch[1]), env);
+      return withCors(await handleProjectSummary(request, env, projectSummaryMatch[1]), env, reqOrigin);
     }
 
-    return withCors(json({ error: "not_found" }, { status: 404 }), env);
+    return withCors(json({ error: "not_found" }, { status: 404 }), env, reqOrigin);
   },
 } satisfies ExportedHandler<Env>;
