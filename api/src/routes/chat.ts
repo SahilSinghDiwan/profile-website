@@ -2,14 +2,12 @@ import type { Env } from "../index";
 import { cacheKey, createKvCache, CORPUS_VERSION } from "../lib/cache";
 import { checkRateLimit, clientIp, rateLimitHeaders } from "../lib/ratelimit";
 import { verifyTurnstile } from "../lib/turnstile";
+import bundledCorpus from "../../data/corpus.json";
 
 const CHAT_MODEL = "gpt-5-nano";
+const EMBED_MODEL = "text-embedding-3-small";
 const RL_CFG = { limit: 10, windowSec: 60 };
-
-interface ChatRequest {
-  question: string;
-  turnstileToken: string;
-}
+const RELEVANCE_THRESHOLD = 0.15;
 
 interface Chunk {
   text: string;
@@ -21,37 +19,30 @@ interface Corpus {
   chunks: Chunk[];
 }
 
-// Simple cosine similarity implementation
+const corpus = bundledCorpus as Corpus;
+
 function cosineSimilarity(a: number[], b: number[]): number {
   let dotProduct = 0;
   let normA = 0;
   let normB = 0;
-
   for (let i = 0; i < Math.min(a.length, b.length); i++) {
     dotProduct += a[i] * b[i];
     normA += a[i] * a[i];
     normB += b[i] * b[i];
   }
-
   const denominator = Math.sqrt(normA) * Math.sqrt(normB);
   return denominator === 0 ? 0 : dotProduct / denominator;
 }
 
-// Mock embedding function (returns a simple vector based on input hash)
-function mockEmbedding(text: string): number[] {
-  // Generate a simple deterministic embedding for testing
-  let hash = 0;
-  for (let i = 0; i < text.length; i++) {
-    const char = text.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-
-  const embedding: number[] = [];
-  for (let i = 0; i < 3; i++) {
-    embedding.push((Math.sin(hash + i) * 1000) % 1);
-  }
-  return embedding;
+async function embedQuestion(text: string, apiKey: string): Promise<number[] | null> {
+  const res = await fetch("https://api.openai.com/v1/embeddings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({ model: EMBED_MODEL, input: text }),
+  });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { data: Array<{ embedding: number[] }> };
+  return data.data[0]?.embedding ?? null;
 }
 
 export async function handleChat(request: Request, env: Env): Promise<Response> {
@@ -111,48 +102,25 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
     return new Response(cached, { status: 200, headers });
   }
 
-  // Load corpus (default fallback for testing)
-  let corpus: Corpus = {
-    version: "v1",
-    chunks: [
-      {
-        text: "Sahil Diwan is an AI/GenAI Engineer with expertise in incident management systems, real-time log analysis, and machine learning platforms.",
-        embedding: [0.1, 0.2, 0.3],
-      },
-      {
-        text: "Core technologies include Python, Kubernetes, Apache Kafka, Elasticsearch, FAISS, LangChain, and Microsoft Azure.",
-        embedding: [0.2, 0.3, 0.4],
-      },
-    ],
-  };
-
-  try {
-    const corpusUrl = new URL(
-      "https://raw.githubusercontent.com/SahilSinghDiwan/profile-website/main/api/data/corpus.json",
-    );
-    const corpusRes = await fetch(corpusUrl);
-    if (corpusRes.ok) {
-      corpus = (await corpusRes.json()) as Corpus;
-    }
-  } catch {
-    // Use default corpus if loading fails
+  // Embed the question with the same model used to build the corpus
+  if (!env.OPENAI_API_KEY) {
+    return new Response(JSON.stringify({ error: "embedding_unavailable" }), { status: 500 });
+  }
+  const questionEmbedding = await embedQuestion(question, env.OPENAI_API_KEY);
+  if (!questionEmbedding) {
+    return new Response(JSON.stringify({ error: "embedding_failed" }), { status: 502 });
   }
 
-  // Embed question (mock - use simple hash for now)
-  const questionEmbedding = mockEmbedding(question);
-
-  // Find top 4 relevant chunks
+  // Rank chunks by cosine similarity, take top 4
   const scored = corpus.chunks.map((chunk) => ({
     chunk,
     score: cosineSimilarity(questionEmbedding, chunk.embedding),
   }));
-
   scored.sort((a, b) => b.score - a.score);
   const topChunks = scored.slice(0, 4).map((s) => s.chunk.text);
 
-  // If no relevant chunks (low scores), return polite refusal
   const bestScore = scored[0]?.score ?? 0;
-  if (bestScore < 0.1) {
+  if (bestScore < RELEVANCE_THRESHOLD) {
     const response = "I'm specifically trained to answer questions about Sahil's portfolio and experience. Your question seems outside that scope. Feel free to ask about his projects, skills, or background!";
     headers.set("Content-Type", "text/event-stream");
     headers.set("Cache-Control", "no-cache");
@@ -198,7 +166,8 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
           { role: "user", content: question },
         ],
         stream: true,
-        max_tokens: 400,
+        max_completion_tokens: 800,
+        reasoning_effort: "minimal",
       }),
     });
 
@@ -213,41 +182,50 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
 
     let fullResponse = "";
     const decoder = new TextDecoder();
+    const encoder = new TextEncoder();
 
     const responseStream = new ReadableStream({
       async start(controller) {
+        let buffer = "";
+
+        const processLine = (line: string) => {
+          if (!line.startsWith("data: ")) return;
+          const data = line.slice(6);
+          if (data === "[DONE]") return;
+          try {
+            const parsed = JSON.parse(data) as { choices: Array<{ delta: { content?: string } }> };
+            const content = parsed.choices[0]?.delta?.content ?? "";
+            if (content) {
+              fullResponse += content;
+              if (fullResponse.length > 1600) {
+                fullResponse = fullResponse.slice(0, 1600);
+              }
+              controller.enqueue(encoder.encode(content));
+            }
+          } catch {
+            // Skip malformed JSON; only complete lines reach here.
+          }
+        };
+
         try {
           while (true) {
             const { done, value } = await reader.read();
             if (done) {
-              // Cache the final response
+              const tail = buffer + decoder.decode();
+              if (tail) {
+                for (const line of tail.split("\n")) processLine(line.trim());
+              }
               await cache.set(cacheKey_, fullResponse, 7 * 24 * 60 * 60);
               controller.close();
               break;
             }
 
-            const text = decoder.decode(value, { stream: true });
-            const lines = text.split("\n");
-
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                const data = line.slice(6);
-                if (data === "[DONE]") continue;
-                try {
-                  const parsed = JSON.parse(data) as { choices: Array<{ delta: { content?: string } }> };
-                  const content = parsed.choices[0]?.delta?.content ?? "";
-                  if (content) {
-                    fullResponse += content;
-                    // Cap at 400 tokens (rough estimate: ~4 chars per token)
-                    if (fullResponse.length > 1600) {
-                      fullResponse = fullResponse.slice(0, 1600);
-                    }
-                    controller.enqueue(new TextEncoder().encode(content));
-                  }
-                } catch {
-                  // Ignore parse errors for incomplete JSON
-                }
-              }
+            buffer += decoder.decode(value, { stream: true });
+            let newlineIdx: number;
+            while ((newlineIdx = buffer.indexOf("\n")) !== -1) {
+              const line = buffer.slice(0, newlineIdx).trim();
+              buffer = buffer.slice(newlineIdx + 1);
+              if (line) processLine(line);
             }
           }
         } catch (error) {

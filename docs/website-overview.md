@@ -2,12 +2,14 @@
 
 A reference for future chats: structure, content, conventions, and decisions made for this site.
 
+> **Status**: Portfolio v2 implementation complete (May 2026). The "v1 reference" section below describes the original single-page layout; the "v2 — Live Architecture" section at the end of this file describes the deployed shape (multi-page React app + Cloudflare Worker API + dev preview environment). Read the v2 section first when resuming work.
+
 ## Repo
 
 - **GitHub**: https://github.com/SahilSinghDiwan/profile-website
 - **Local path**: `/home/sahil/projects/profile-website`
-- **Stack**: Vite 7 + React 19 + TypeScript 5.8 + Tailwind 4 + shadcn-style UI primitives (Radix), TanStack Query, React Router (HashRouter), lucide-react icons.
-- **Routing**: `HashRouter` with two routes — `/` → `Index`, `*` → `NotFound`.
+- **Stack**: Vite 7 + React 19 + TypeScript 5.8 + Tailwind 4 + shadcn-style UI primitives (Radix), TanStack Query, React Router (BrowserRouter), lucide-react icons.
+- **Routing**: `BrowserRouter` — `/` → `Index`, `/projects` → `Projects`, `/projects/:slug` → `ProjectDetail`, `*` → `NotFound`. (Was `HashRouter` in v1; migrated as part of F0.2 so OG previews unfurl on per-project URLs.)
 
 ## File Structure
 
@@ -322,3 +324,155 @@ Use `gap-*` for nav and inline groups, **not** `space-x-*` / `space-y-*`. Past a
 3. `src/index.css` — precompiled Tailwind; treat as read-only reference for what classes already exist.
 4. `index.html` — title, meta, Inter font preconnect.
 5. This file (`docs/website-overview.md`).
+
+---
+
+## Portfolio v2 — Live Architecture (current)
+
+End of v2 phase: marked **complete** May 2026. Everything below describes the deployed shape that supersedes the v1 sections above. The plan (`docs/Portfolio v2 implementation plan.md`) is the canonical spec; this section is the implementation truth.
+
+### Surfaces
+
+| Surface | URL | Notes |
+|---|---|---|
+| Production frontend | `https://nostalkers.shop` (custom domain on Vercel) | `main` branch deploys here. SSO disabled on the apex domain. |
+| Dev preview frontend | `https://profile-website-git-dev-sahils-projects-22d5c9eb.vercel.app` | `dev` branch. Vercel SSO is **on** for previews — disable temporarily via `PATCH /v9/projects/profile-website {ssoProtection: null}` to run automation, then restore. |
+| Production API | `https://profile-api.diwan-sahilsingh.workers.dev` (planned `api.nostalkers.shop`) | Worker name `profile-api` (default env). Deploy via `wrangler deploy` from `api/`. |
+| Dev API | `https://profile-api-dev.diwan-sahilsingh.workers.dev` | Worker name `profile-api-dev` (`[env.dev]` block in `api/wrangler.toml`). Deploy via `docker compose run --rm --no-deps -e CLOUDFLARE_API_TOKEN -e CLOUDFLARE_ACCOUNT_ID api npx wrangler deploy --env dev`. |
+
+### Repo layout
+
+```
+profile-website/
+├── src/                     # Vite + React 19 + TS frontend
+│   ├── pages/               # Index, Projects, ProjectDetail, NotFound
+│   ├── components/          # ResumeChat, GitHubProjects, ProjectCarousel,
+│   │                        # PinnedProjects, TechFilter, ProjectAISummary,
+│   │                        # CommandPalette, DemoEmbed, ResumeDownload,
+│   │                        # AnimatedSection, CardSkeleton, ChatSkeleton
+│   │   └── ui/              # shadcn primitives + Skeleton
+│   ├── data/                # projects/skills/experience/education/credentials/
+│   │                        #   contacts/profile (extracted from Index.tsx)
+│   ├── hooks/               # useChat, useCmdK, useFilteredProjects
+│   ├── lib/                 # api.ts (chat/listRepos/projectSummary), motion.ts,
+│   │                        # meta.tsx (Seo via React 19 native head hoisting),
+│   │                        # utils.ts
+│   └── __tests__/           # smoke + regression/r1..r10 + components/* + routes
+│
+├── api/                     # Cloudflare Worker (sibling to src/)
+│   ├── src/
+│   │   ├── index.ts         # router + multi-origin CORS (comma-separated PORTFOLIO_ORIGIN)
+│   │   ├── lib/             # cache.ts (KV+SHA-256+CORPUS_VERSION),
+│   │   │                    # ratelimit.ts (KV fixed-window),
+│   │   │                    # turnstile.ts, projects.ts (server-side slug list)
+│   │   └── routes/          # github.ts, chat.ts, project-summary.ts
+│   ├── data/corpus.json     # RAG corpus — real OpenAI embeddings (1536-dim, ~308 KB).
+│   │                        # Bundled into the worker upload.
+│   ├── scripts/build-embeddings.ts
+│   └── wrangler.toml        # default env + [env.dev] block with KV ids and origin allowlist
+│
+├── e2e/                     # Playwright smoke tests
+├── docs/                    # plan + this file + conversations-history
+├── docker-compose.yml       # web (Vite, 5173) + api (Wrangler, 8787)
+├── Dockerfile.web / .api    # node:20-alpine for web; node:20-slim+libc6 for api
+└── .npmrc                   # legacy-peer-deps=true (React 19 peer fixes)
+```
+
+### Acceptance criteria status (vs `docs/Portfolio v2 implementation plan.md` §8)
+
+| # | Criterion | Status | Notes |
+|---|---|---|---|
+| 1 | All Phase 0 tasks merged | ✅ | Tailwind v4, BrowserRouter, data extraction, vitest infra |
+| 2 | All Track A deployed | ✅ | `/healthz`, `/api/github/repos`, `/api/chat`, `/api/projects/:slug/summary` live on dev worker |
+| 3 | All Track B + C merged + deployed | ✅ | All components present in `src/components/` and wired in `App.tsx`, `Projects.tsx`, `ProjectDetail.tsx` |
+| 4 | Live: chat streams a coherent answer | ✅ | Verified via curl: real RAG retrieval + GPT-5-nano + clean SSE buffering |
+| 5 | Live: `/projects` shows pinned + auto GitHub feed, filterable by tech | ✅ | `PinnedProjects` + `GitHubProjects` + `TechFilter` (URL-synced via `?tech=...`) |
+| 6 | Live: per-project page shows AI summary + (where set) demo embed | ✅ | `ProjectAISummary` calls `/api/projects/:slug/summary`; `DemoEmbed` renders iframe when `demoUrl` set |
+| 7 | Live: `Cmd+K` opens palette anywhere | ✅ | `CommandPalette` mounted globally in `App.tsx` |
+| 8 | OG previews unfurl on per-project URLs | ⏳ | Code uses React 19 native `<title>`/`<meta>` hoisting per route. **`public/og-default.png` (1200×630) not yet placed** — without it OG previews show no image. |
+| 9 | Lighthouse: Perf ≥ 90, A11y ≥ 95, SEO ≥ 95 on `/` | ⏳ | Not measured. Run after `og-default.png` is in place. |
+| 10 | `npm test` passes 100% on main | ✅ on web, ⚠️ pi-blocked on api | Frontend tests pass in Docker. API tests use `@cloudflare/vitest-pool-workers`, which OOMs `workerd` on the Pi (32-bit virtual address space limit). They run on real Cloudflare and on x86_64 Linux. |
+
+**Net:** v2 implementation is feature-complete and deployed to dev. Two closing chores remain before v2-on-`main`:
+1. Generate / drop in `public/og-default.png` (1200×630).
+2. Take a Lighthouse snapshot from a non-Pi host (or use PageSpeed Insights against the dev preview).
+
+### Deployment & secrets cheatsheet
+
+**Frontend (Vercel project `profile-website`, id `prj_DqytaaeHohbvQHe7bRvKsOvUv1uP`):**
+- `main` → production at custom domain.
+- `dev` → preview at `profile-website-git-dev-sahils-projects-22d5c9eb.vercel.app`.
+- Env vars (Preview *and* Production):
+  - `VITE_API_BASE_URL` — `https://profile-api-dev.diwan-sahilsingh.workers.dev` for preview, the prod URL for production.
+  - `VITE_TURNSTILE_SITE_KEY` — `0x4AAAAAADFhkVYoGHa2wMUp` (the value Cloudflare hands you; **23 chars, no trailing `w`** — a previous typo gave a 24-char value that produced Turnstile error 400020).
+- `.npmrc` ships `legacy-peer-deps=true` so Vercel installs succeed under React 19.
+- SPA fallback: `vercel.json` rewrites `/(.*)` → `/`.
+
+**Worker (`api/wrangler.toml`):**
+- Default env → production worker `profile-api`.
+- `[env.dev]` → `profile-api-dev`. Vars: `PORTFOLIO_ORIGIN` is comma-separated allowlist (`http://localhost:5173,https://profile-website-git-dev-sahils-projects-22d5c9eb.vercel.app`); `ENV=dev`.
+- KV namespaces (dev): CACHE `a5b1cffbd20a4099a9868ef9ee053f0a`, RATE_LIMIT `d12f22be19c443128be8096623ce5cee`. Production has its own pair — set with `wrangler kv:namespace create CACHE/RATE_LIMIT` and update the default `[[kv_namespaces]]` block before deploying to prod.
+- Secrets (set per env via `wrangler secret put <NAME> --env dev` from inside the `api` Docker image):
+  - `OPENAI_API_KEY`
+  - `TURNSTILE_SECRET_KEY` — must pair with the sitekey above (the matching secret starts with `0x4AAAAAADFhkc…`).
+
+**Cloudflare Turnstile widget:**
+- Sitekey `0x4AAAAAADFhkVYoGHa2wMUp`, mode `managed`, allowed domains `nostalkers.shop`, the dev Vercel preview, plus add `localhost` *temporarily* if you want to run automated tests against `http://localhost:5173`.
+- Manage via API: `GET/PUT /accounts/{CLOUDFLARE_ACCOUNT_ID}/challenges/widgets[/{sitekey}]`.
+
+**Pi-specific deployment quirks:**
+- `wrangler dev` and `vitest` for the worker both crash on this 32-bit-VA Pi (`workerd` tcmalloc OOM at startup). All worker commands therefore use `docker compose run --rm --no-deps api npx wrangler …`. Tests for the worker can only be run on real Cloudflare or on x86_64.
+- `docker compose up api` will fail; `docker compose up web` works fine if the frontend points at a deployed worker.
+
+### Chat backend internals (current)
+
+`api/src/routes/chat.ts` flow:
+1. Parse JSON body — invalid → 400 `invalid_json`.
+2. `turnstileToken` required → 401 `missing_turnstile_token` if absent.
+3. Verify Turnstile via `verifyTurnstile()` — bypassed only when `env.ENV === "dev"` *and* request has `?dev=1`.
+4. Rate-limit by IP (10/60s for `/api/chat`).
+5. SHA-256 cache key on `(question, CORPUS_VERSION)` — current `CORPUS_VERSION = "v2"`. KV cache hit returns 200 `text/event-stream`, `X-Cache-Status: hit`.
+6. Embed the question via OpenAI `text-embedding-3-small`.
+7. Cosine-rank against bundled `corpus.json` (7 chunks). If top score < `RELEVANCE_THRESHOLD` (0.15), return the canned off-topic refusal and cache it.
+8. Otherwise stream a completion from `gpt-5-nano`. Reasoning-model parameters: `max_completion_tokens: 800`, `reasoning_effort: "minimal"`. `max_tokens` is rejected by GPT-5; `reasoning_effort: "minimal"` is required to actually emit content within a small budget.
+9. The streaming body is parsed with a chunk-boundary-safe SSE buffer: incomplete `data: {…}` lines are carried across chunks so token characters are not dropped at TCP boundaries. Final response is cached for 7 days.
+
+### Frontend chat widget internals
+
+`src/components/ResumeChat.tsx`:
+- Floating bubble (bottom-right) → opens 380×520 panel with suggested chips, streaming message panel, error panel, and a Turnstile widget mounted lazily on first open.
+- Turnstile is loaded via `https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit` and rendered with `window.turnstile.render` once per session. Widget is removed and the token cleared on `handleClose`.
+- All three send paths (Send button, Enter key, suggested-chip click) gate on `turnstileMissing = turnstileRequired && !turnstileToken`.
+- If `VITE_TURNSTILE_SITE_KEY` is empty at build time, an amber banner replaces the input area: *"Chat is unavailable: VITE_TURNSTILE_SITE_KEY is missing from the build environment."*
+- `src/lib/api.ts` `API_BASE` value is sanitized with `.trim().replace(/\/$/, "")` because env vars pasted into the Vercel UI sometimes carry trailing whitespace and `%20%20` ends up in URLs (`net::ERR_NAME_NOT_RESOLVED`).
+
+### How to run / deploy
+
+```bash
+# Local dev — Docker only (host has no node).
+# Both containers come up; the api container OOMs on this Pi (see quirk above).
+docker compose up web
+
+# Point local web at the deployed dev worker (avoids the api OOM):
+VITE_API_BASE_URL=https://profile-api-dev.diwan-sahilsingh.workers.dev \
+  docker compose up web
+
+# Deploy worker (dev or prod):
+docker compose run --rm --no-deps \
+  -e CLOUDFLARE_API_TOKEN -e CLOUDFLARE_ACCOUNT_ID \
+  api npx wrangler deploy --env dev          # or omit --env for prod
+
+# Regenerate the RAG corpus from data/resume.md:
+docker compose run --rm \
+  -e OPENAI_API_KEY -v "$(pwd)/data:/repo-data:ro" \
+  --no-deps api npx tsx scripts/build-embeddings.ts
+# then bump CORPUS_VERSION in api/src/lib/cache.ts and redeploy.
+
+# Frontend tests:
+docker compose run --rm web npm test
+```
+
+### Pointers to other docs
+
+- `docs/Portfolio v2 implementation plan.md` — canonical TDD plan (Phase 0 → Wave 1–4, dispatch guide, acceptance criteria).
+- `docs/conversations-history.md` — running execution log of the v2 build, including session-level decisions and bug fixes (read §10 for the dev-environment + chat-hardening session).

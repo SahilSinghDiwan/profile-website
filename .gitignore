@@ -13,6 +13,8 @@ dist
 dist-ssr
 *.local
 .env
+.env.*
+!.env.example
 
 # Build artifacts
 api/.wrangler/
@@ -37,3 +39,4 @@ api/dist/
 
 # Project status (not committed, local tracking only)
 STATUS.md
+.npm/
