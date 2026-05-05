@@ -104,14 +104,19 @@ export function ResumeChat({ getTurnstileToken: externalGetToken }: ResumeChatPr
     }
   }, [retryAfter]);
 
+  const turnstileRequired = !!TURNSTILE_SITE_KEY && !externalGetToken;
+  const turnstileMissing = turnstileRequired && !turnstileToken;
+
   const handleSendMessage = async (question: string) => {
     if (!question.trim()) return;
+    if (turnstileMissing) return;
 
     setInputValue("");
     await sendMessage(question);
   };
 
   const handleSuggestedClick = (question: string) => {
+    if (turnstileMissing) return;
     setInputValue(question);
     handleSendMessage(question);
   };
@@ -172,6 +177,7 @@ export function ResumeChat({ getTurnstileToken: externalGetToken }: ResumeChatPr
                       variant="outline"
                       className="w-full justify-start text-left h-auto whitespace-normal py-2 px-3"
                       onClick={() => handleSuggestedClick(q)}
+                      disabled={turnstileMissing}
                     >
                       {q}
                     </Button>
@@ -197,28 +203,33 @@ export function ResumeChat({ getTurnstileToken: externalGetToken }: ResumeChatPr
 
           {/* Input area */}
           <div className="border-t border-gray-200 p-4 dark:border-gray-800">
-            {TURNSTILE_SITE_KEY && !externalGetToken && (
-              <div className="mb-2 flex justify-center">
+            {turnstileRequired && (
+              <div className="mb-2 flex flex-col items-center gap-1">
                 <div ref={turnstileContainerRef} />
+                {turnstileMissing && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Complete the challenge above to enable chat.
+                  </p>
+                )}
               </div>
             )}
             <div className="flex gap-2">
               <Input
-                placeholder="Ask about Sahil's experience..."
+                placeholder={turnstileMissing ? "Complete the challenge first…" : "Ask about Sahil's experience..."}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={(e) => {
+                onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     handleSendMessage(inputValue);
                   }
                 }}
-                disabled={isLoading}
+                disabled={isLoading || turnstileMissing}
                 className="flex-1"
               />
               <Button
                 onClick={() => handleSendMessage(inputValue)}
-                disabled={isLoading || !inputValue.trim() || (!!TURNSTILE_SITE_KEY && !externalGetToken && !turnstileToken)}
+                disabled={isLoading || !inputValue.trim() || turnstileMissing}
                 size="icon"
                 aria-label="Send message"
               >
