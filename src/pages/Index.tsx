@@ -2,7 +2,15 @@ import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { Github, Mail, Linkedin, Moon, Sun, Menu, X, MessageCircle } from 'lucide-react';
+import { Github, Mail, Linkedin, Moon, Sun, Menu, X } from 'lucide-react';
+import { projects } from '../data/projects';
+import { skills } from '../data/skills';
+import { experience } from '../data/experience';
+import { education } from '../data/education';
+import { credentials } from '../data/credentials';
+import { contacts } from '../data/contacts';
+import { Seo } from '../lib/meta';
+import { ResumeDownload } from '../components/ResumeDownload';
 
 const SKILL_PREVIEW_COUNT = 8;
 const EXPERIENCE_BULLET_PREVIEW_COUNT = 2;
@@ -43,185 +51,12 @@ const Index = () => {
     setIsMobileMenuOpen(false);
   };
 
-  const projects = [
-    {
-      title: "Incident Resolution Assistant",
-      description: "Architected a Python-based microservices platform integrating with ITSM systems to assist SREs. Scaled from a 20-user POC to a production tool supporting 200+ SREs, processing live incident streams.",
-      technologies: ["Python", "Microservices", "Kubernetes", "Helm"],
-      impact: "Scaled POC → production for 200+ SREs",
-      category: "GenAI / Microservices"
-    },
-    {
-      title: "Real-Time Log Analysis Pipeline",
-      description: "Engineered an event-driven pipeline for real-time log fetching, achieving high-accuracy automated root cause identification across live incident streams.",
-      technologies: ["Apache Kafka", "Elasticsearch", "Python"],
-      impact: "90% RCA accuracy, 40–60% MTTR reduction",
-      category: "Performance Optimization"
-    },
-    {
-      title: "Hybrid Retrieval System",
-      description: "Designed a hybrid retrieval system to overcome data ambiguity, orchestrating full-stack deployment on Kubernetes using custom Helm charts.",
-      technologies: ["FAISS", "Elasticsearch", "Kubernetes", "Helm"],
-      impact: "Similar-incident recall: 30% → 80%+",
-      category: "Advanced Retrieval"
-    },
-    {
-      title: "Cloud-Native Anomaly Detection",
-      description: "Built and deployed an automated anomaly detection system utilizing Airflow pipelines to process data-center-scale datasets on a Kubernetes cluster.",
-      technologies: ["Apache Airflow", "Kubernetes", "Python"],
-      impact: "Data-center-scale dataset processing",
-      category: "MLOps"
-    },
-    {
-      title: "RAG Chatbot with Live Internet Access",
-      description: "Architected a customized RAG chatbot with live internet access for dynamic data enrichment. Validated through rigorous ground-truth manual testing and deployed on Microsoft Azure.",
-      technologies: ["LangChain", "RAG", "Microsoft Azure", "Python"],
-      impact: "50% better response quality, near-zero hallucination",
-      category: "RAG Architecture"
-    },
-    {
-      title: "Multimodal AI Generation",
-      description: "Owned the end-to-end lifecycle for a generative AI solution, successfully fine-tuning an instruct-pix2pix model and managing the final application rollout.",
-      technologies: ["PyTorch", "instruct-pix2pix", "Fine-Tuning"],
-      impact: "Successful fine-tune & production rollout",
-      category: "Multimodal AI"
-    }
-  ];
-
-  const skills = {
-    "Programming & Frameworks": ["Python", "Flask", "FastAPI", "Streamlit", "Gradio"],
-    "AI / GenAI": ["RAG Pipelines", "LLM Integration", "Prompt Engineering", "Model Fine-Tuning", "PyTorch", "LangChain", "Hugging Face Transformers", "Accelerate", "Optimum", "LlamaIndex", "DeepSpeed", "ONNX", "TensorRT"],
-    "Vector Search & Retrieval": ["FAISS", "Milvus", "ChromaDB", "Pinecone", "Elasticsearch"],
-    "Data Engineering": ["Apache Kafka", "Apache Airflow", "Pandas", "NumPy"],
-    "Backend & Integrations": ["Microservices Architecture", "Async Python", "REST APIs", "GraphQL", "Jira / ServiceNow Integrations"],
-    "Cloud & DevOps": ["Docker", "Kubernetes", "AWS", "GCP", "Microsoft Azure", "IBM Cloud", "GitHub Actions", "CI/CD", "Model Monitoring", "Versioning"],
-    "Databases": ["MongoDB", "MySQL", "PostgreSQL"],
-    "Frontend (Basic)": ["React", "TypeScript", "JavaScript", "Vue.js", "Tailwind CSS"],
-    "Tools": ["Git", "Vercel", "Supabase", "Jest"]
-  };
-
-  const experience = [
-    {
-      role: "Software Engineer - AI",
-      company: "Infobell IT Solutions",
-      location: "Bengaluru, India",
-      period: "March 2024 - Present",
-      bullets: [
-        "Architected a Python-based microservices Incident Resolution Assistant; scaled from a 20-user POC to 200+ SREs in production, processing live incident streams.",
-        "Engineered a Kafka + Elasticsearch event-driven pipeline; 90% accuracy in automated root cause identification, 40–60% MTTR reduction.",
-        "Designed a hybrid retrieval system boosting similar-incident recall from 30% to 80%+; deployed full-stack on Kubernetes with custom Helm charts.",
-        "Built a cloud-native anomaly detection system on Airflow + Kubernetes for data-center-scale datasets.",
-        "Architected a customized RAG chatbot with live internet access; 50% better response quality, near-zero hallucination, deployed on Microsoft Azure.",
-        "Owned end-to-end multimodal AI generative solution; fine-tuned an instruct-pix2pix model and managed the final application rollout."
-      ],
-      tech: ["Python", "RAG", "LangChain", "Kafka", "Elasticsearch", "FAISS", "Kubernetes", "Helm", "Airflow", "Microsoft Azure", "PyTorch"]
-    },
-    {
-      role: "Master Trainer - AI & Python",
-      company: "India STEM Foundation",
-      location: "Remote & On-site, India",
-      period: "August 2022 - August 2023",
-      bullets: [
-        "Led Python and Artificial Intelligence training programs for an international student base across the USA, UK, Singapore, and India.",
-        "Designed hands-on hardware/software integration curricula focused on robotics with Python, C, Raspberry Pi, and Arduino.",
-        "Mentored students through end-to-end technical projects, translating complex software concepts into accessible learning modules."
-      ],
-      tech: ["Python", "AI/ML", "C", "Raspberry Pi", "Arduino", "Robotics"]
-    },
-    {
-      role: "Junior Software Developer",
-      company: "Koderoom",
-      location: "Bengaluru, India",
-      period: "June 2020 - June 2022",
-      bullets: [
-        "Developed core backend features for a legal contract management platform handling complex documents for legal cases.",
-        "Built and maintained backend APIs supporting document parsing, data structuring, and secure retrieval of sensitive legal contracts.",
-        "Collaborated with cross-functional teams to streamline platform performance and ensure reliable document processing workflows."
-      ],
-      tech: ["Python", "REST APIs", "Backend", "Document Parsing"]
-    }
-  ];
-
-  const education = [
-    {
-      institution: "Centre for Development of Advanced Computing (C-DAC)",
-      degree: "Post Graduate Training Program",
-      duration: "6 Months",
-      location: "India",
-      period: "Sep 2023 - Feb 2024",
-      tags: ["Advanced Computing", "AI/ML"]
-    },
-    {
-      institution: "G H Raisoni Academy of Engineering and Technology",
-      degree: "Post Graduate Diploma in Industrial Robotics",
-      duration: "Diploma",
-      location: "Nagpur, India",
-      period: "2019 - Feb 2022",
-      tags: ["Robotics", "Automation", "Industrial Systems"]
-    },
-    {
-      institution: "G H Raisoni Academy of Engineering and Technology",
-      degree: "Bachelor of Engineering, Mechanical Engineering",
-      duration: "B.E.",
-      location: "Nagpur, India",
-      period: "2014 - 2018",
-      tags: ["Mechanical Engineering", "Manufacturing"]
-    }
-  ];
-
-  const credentials = [
-    {
-      type: "Certification",
-      name: "IBM Cloud Advocate Essentials",
-      issuer: "IBM",
-      detailLabel: "Issued",
-      detail: "December 2025",
-      tags: ["Cloud", "IBM Cloud"]
-    },
-    {
-      type: "Publication",
-      name: "Hexapod Robot — Design & Mechanics",
-      issuer: "IEEE",
-      detailLabel: "Published",
-      detail: "2019",
-      tags: ["Robotics", "Research", "IEEE"]
-    }
-  ];
-
-  const contacts = [
-    {
-      type: "Direct",
-      label: "Email",
-      description: "Best for project inquiries, collaboration, and detailed discussions.",
-      detailLabel: "Reach me at",
-      detail: "diwan.sahilsingh@gmail.com",
-      href: "mailto:diwan.sahilsingh@gmail.com",
-      tags: ["Async", "Detailed"],
-      icon: Mail
-    },
-    {
-      type: "Network",
-      label: "LinkedIn",
-      description: "Connect for career opportunities, professional networking, and updates.",
-      detailLabel: "Profile",
-      detail: "linkedin.com/in/diwan-sahil",
-      href: "https://www.linkedin.com/in/diwan-sahil",
-      tags: ["Professional", "Networking"],
-      icon: Linkedin
-    },
-    {
-      type: "Instant",
-      label: "WhatsApp",
-      description: "Quickest way to reach me for short questions or scheduling a call.",
-      detailLabel: "Message",
-      detail: "+91 800-7192-680",
-      href: "https://wa.me/918007192680?text=Hello,%20I'd%20like%20to%20connect%20regarding%20your%20portfolio.",
-      tags: ["Real-time", "Quick"],
-      icon: MessageCircle
-    }
-  ];
-
   return (
+    <>
+      <Seo
+        title="Sahil Singh Diwan — AI / GenAI Engineer"
+        description="5+ years building RAG pipelines, scalable microservices, and production-grade GenAI systems."
+      />
     <div className={`min-h-screen bg-background text-foreground transition-colors duration-300`}>
         {/* Navigation */}
         <nav className="fixed top-0 w-full bg-background/80 backdrop-blur-md border-b z-50">
@@ -237,6 +72,7 @@ const Index = () => {
                 <button onClick={() => scrollToSection('experience')} className="hover:text-primary transition-colors">Experience</button>
                 <button onClick={() => scrollToSection('education')} className="hover:text-primary transition-colors">Education</button>
                 <button onClick={() => scrollToSection('contact')} className="hover:text-primary transition-colors">Contact</button>
+                <ResumeDownload />
                 <Button variant="ghost" size="sm" onClick={toggleTheme}>
                   {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 </Button>
@@ -638,6 +474,7 @@ const Index = () => {
           </div>
         </footer>
       </div>
+    </>
     );
   };
 

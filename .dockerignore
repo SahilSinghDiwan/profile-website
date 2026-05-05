@@ -1,0 +1,9 @@
+node_modules
+dist
+.git
+.env
+.env.local
+api/node_modules
+api/.wrangler
+**/.DS_Store
+*.log

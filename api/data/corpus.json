@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "chunks": [
+    {
+      "text": "Sahil Diwan is an AI/GenAI Engineer with expertise in building scalable systems for incident management, data analysis, and machine learning platforms. His experience includes architecting microservices platforms, implementing real-time log analysis pipelines with Apache Kafka and Elasticsearch, and designing retrieval systems with FAISS for improved incident recall. He has worked on cloud-native infrastructure with Kubernetes and Helm, built anomaly detection systems with Apache Airflow, and developed RAG chatbots with LangChain for dynamic data enrichment.",
+      "embedding": [0.1, 0.2, 0.3]
+    },
+    {
+      "text": "His core technical stack includes Python for backend development, Kubernetes and Helm for container orchestration, Apache Kafka for event streaming, Elasticsearch for search and analytics, FAISS for vector similarity search, LangChain for LLM applications, and experience with cloud platforms including Microsoft Azure. He is proficient in building ML pipelines with Apache Airflow, implementing fine-tuning with PyTorch and instruct-pix2pix models, and creating end-to-end solutions from prototyping through production deployment.",
+      "embedding": [0.2, 0.3, 0.4]
+    }
+  ]
+}

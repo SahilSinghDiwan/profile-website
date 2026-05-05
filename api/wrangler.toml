@@ -1,0 +1,24 @@
+name = "profile-api"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+PORTFOLIO_ORIGIN = "http://localhost:5173"
+ENV = "dev"
+
+# KV namespace bindings — create with `wrangler kv:namespace create CACHE`
+# and replace the IDs below for staging / production.
+[[kv_namespaces]]
+binding = "CACHE"
+id = "REPLACE_WITH_KV_ID"
+preview_id = "REPLACE_WITH_PREVIEW_KV_ID"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "REPLACE_WITH_KV_ID"
+preview_id = "REPLACE_WITH_PREVIEW_KV_ID"
+
+# Secrets (set via `wrangler secret put`):
+#   OPENAI_API_KEY
+#   TURNSTILE_SECRET_KEY

@@ -1,0 +1,32 @@
+# # Cloudflare Worker dev container — wrangler dev with hot reload
+# FROM node:20-alpine
+
+# WORKDIR /app
+
+# COPY api/package.json api/package-lock.json* ./
+# # RUN npm install --include=dev
+# RUN npm install --include=dev --legacy-peer-deps
+
+# EXPOSE 8787
+# CMD ["npm", "run", "dev"]
+
+
+FROM node:20-slim 
+# Using slim to ensure we have the necessary libs for workerd
+
+WORKDIR /app
+
+# Install system dependencies needed for workerd
+RUN apt-get update && apt-get install -y libc6 && rm -rf /var/lib/apt/lists/*
+
+COPY package.json package-lock.json* ./
+
+# Force a clean install of the linux-64 binary
+RUN npm install --include=dev --legacy-peer-deps
+
+COPY . .
+
+EXPOSE 8787
+
+# Use 0.0.0.0 to ensure the port is reachable outside the container
+CMD ["npx", "wrangler", "dev", "src/index.ts", "--ip", "0.0.0.0", "--port", "8787", "--persist"]
