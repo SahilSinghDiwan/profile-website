@@ -8,9 +8,23 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+node_modules.root-owned/
 dist
 dist-ssr
 *.local
+.env
+.env.*
+!.env.example
+
+# Build artifacts
+api/.wrangler/
+test-results/
+**/core
+*.core
+
+# API build artifacts (managed by docker)
+api/node_modules/
+api/dist/
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +36,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Project status (not committed, local tracking only)
+STATUS.md
+.npm/

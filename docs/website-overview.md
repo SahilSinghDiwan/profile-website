@@ -1,83 +1,105 @@
-# Profile Website — Overview & Reference
+# Website Overview
 
-A reference for future chats: structure, content, conventions, and decisions made for this site.
+Reference for future sessions: architecture, content, conventions, and the gotchas that survived the v2 rebuild. Read this first when resuming work.
 
-## Repo
+> Status: v2 implementation complete (May 2026). Production at `nostalkers.shop`, dev preview from the `dev` branch. The Cloudflare Worker serves a RAG-backed Portfolio Assistant chat over a bundled embeddings corpus.
 
-- **GitHub**: https://github.com/SahilSinghDiwan/profile-website
-- **Local path**: `/home/sahil/projects/profile-website`
-- **Stack**: Vite 7 + React 19 + TypeScript 5.8 + Tailwind 4 + shadcn-style UI primitives (Radix), TanStack Query, React Router (HashRouter), lucide-react icons.
-- **Routing**: `HashRouter` with two routes — `/` → `Index`, `*` → `NotFound`.
+---
 
-## File Structure
+## 1. Architecture
+
+### Surfaces
+
+| | URL | Notes |
+|---|---|---|
+| Production frontend | `https://nostalkers.shop` | Vercel custom domain, deploys from `main`. Vercel SSO disabled on the apex. |
+| Dev preview frontend | `https://profile-website-git-dev-sahils-projects-22d5c9eb.vercel.app` | Vercel preview, deploys from `dev`. SSO is *on* by default — disable temporarily via `PATCH /v9/projects/profile-website {ssoProtection: null}` if you need automation, then restore. |
+| Production API | `https://profile-api.diwan-sahilsingh.workers.dev` (planned `api.nostalkers.shop`) | Worker name `profile-api` (default env). |
+| Dev API | `https://profile-api-dev.diwan-sahilsingh.workers.dev` | Worker name `profile-api-dev` (`[env.dev]` block in `api/wrangler.toml`). |
+
+### Stack
+
+- **Frontend**: Vite 7 + React 19 + TypeScript 5.8 + Tailwind v4 + shadcn-style primitives (Radix), TanStack Query, BrowserRouter, Framer Motion, Embla, react-markdown, lucide-react.
+- **Worker** (`api/`): Cloudflare Worker with KV (cache + rate limit), Cloudflare Turnstile bot protection, real-time RAG via OpenAI `text-embedding-3-small` over a bundled `corpus.json`, GPT-5-nano streaming completions.
+- **Tooling**: Docker-only dev (no host Node), Vitest + Playwright for tests, Wrangler for the Worker.
+
+### Repo layout
 
 ```
 profile-website/
-├── docs/
-│   ├── analysis.md
-│   └── website-overview.md   (this file)
-├── public/
-├── src/
-│   ├── App.tsx               — providers + router
-│   ├── main.tsx              — entry
-│   ├── index.css             — Tailwind base
-│   ├── components/ui/        — Radix-based primitives (Button, Card, Badge, Toaster, Tooltip, Sonner)
-│   ├── hooks/use-toast.ts
-│   ├── lib/utils.ts          — cn() helper
-│   └── pages/
-│       ├── Index.tsx         — single-page portfolio (all sections live here)
-│       └── NotFound.tsx
-├── index.html
-├── package.json
-├── vite.config.ts
-└── tsconfig*.json
+├── src/                     # Vite + React 19 + TS frontend
+│   ├── pages/               # Index, Projects, ProjectDetail, NotFound
+│   ├── components/          # ResumeChat (Portfolio Assistant), GitHubProjects,
+│   │                        # ProjectCarousel, PinnedProjects, TechFilter,
+│   │                        # ProjectAISummary, CommandPalette, DemoEmbed,
+│   │                        # ResumeDownload, AnimatedSection,
+│   │                        # CardSkeleton, ChatSkeleton
+│   │   └── ui/              # shadcn primitives + Skeleton
+│   ├── data/                # projects/skills/experience/education/credentials/
+│   │                        # contacts/profile  (typed const exports)
+│   ├── hooks/               # useChat, useCmdK, useFilteredProjects
+│   ├── lib/                 # api.ts, motion.ts, meta.tsx, utils.ts
+│   └── __tests__/           # smoke + regression/r1..r10 + components/* + routes
+│
+├── api/                     # Cloudflare Worker
+│   ├── src/
+│   │   ├── index.ts         # router + multi-origin CORS
+│   │   ├── lib/             # cache.ts (KV+SHA-256+CORPUS_VERSION),
+│   │   │                    # ratelimit.ts (KV fixed-window),
+│   │   │                    # turnstile.ts, projects.ts (server-side slug list)
+│   │   └── routes/          # github.ts, chat.ts, project-summary.ts
+│   ├── data/corpus.json     # RAG corpus — real OpenAI embeddings (1536-dim)
+│   ├── scripts/build-embeddings.ts
+│   └── wrangler.toml        # default env + [env.dev] block
+│
+├── e2e/                     # Playwright smoke tests
+├── docs/                    # this file + plan + content-management plan + history
+├── data/                    # resume.md (RAG source) + resume PDF
+├── docker-compose.yml
+├── Dockerfile.web / .api
+└── README.md / DEV.md
 ```
 
-The entire portfolio is a **single page** (`src/pages/Index.tsx`) with smooth-scroll anchors. There are no separate route pages for each section.
+### Routing
 
-## Page Sections (in order)
+| Route | Component | Purpose |
+|---|---|---|
+| `/` | `pages/Index.tsx` | Landing page (hero, about, skills, projects, experience, education, contact). Section nav scrolls within this page. |
+| `/projects` | `pages/Projects.tsx` | Pinned projects + GitHub auto-feed + tech filter. |
+| `/projects/:slug` | `pages/ProjectDetail.tsx` | Per-project page with AI summary card and demo embed. |
+| `*` | `pages/NotFound.tsx` | Branded 404. |
 
-All inside `src/pages/Index.tsx`. Each section is a `<section id="...">` and is reachable from the nav via `scrollToSection(sectionId)`.
+`BrowserRouter` (not `HashRouter`) so OG previews unfurl on `/projects/:slug`. SPA fallback in `vercel.json`.
 
-| Section ID    | Heading                          | Notes                                                                                  |
-|---------------|----------------------------------|----------------------------------------------------------------------------------------|
-| (hero, no id) | "AI / GenAI Engineer"            | H1 + tagline + 2 CTA buttons (View My Work / Get In Touch).                            |
-| `about`       | About Me                         | Two paragraphs + 6-stat grid.                                                          |
-| `skills`      | Skills & Technologies            | 9 categorized cards rendered from the `skills` object.                                 |
-| `projects`    | Featured Projects                | 6 cards rendered from the `projects` array. **Non-interactive** — no live demo / code links. |
-| `experience`  | Work Experience                  | 3 job cards rendered from the `experience` array.                                      |
-| `education`   | Education & Certifications       | Two-column: Education (3 entries) + Certifications & Publications (2 entries).         |
-| `contact`     | Get In Touch                     | Email card + LinkedIn card + WhatsApp CTA button.                                      |
-| (footer)      | © 2026 Sahil Singh Diwan         | GitHub / LinkedIn / Email icon links.                                                  |
+---
 
-## Personal / Contact Info (single source of truth)
+## 2. Content (single source of truth)
+
+All content lives as typed const exports in `src/data/*.ts`. The worker has its own slug list at `api/src/lib/projects.ts` for the `/api/projects/:slug/summary` endpoint. Adding/editing content today still requires a code change + push — see `docs/content-management-plan.md` for the proposed migration to a more authoring-friendly setup.
+
+### Personal / Contact
 
 | Field      | Value                                         |
 |------------|-----------------------------------------------|
 | Full name  | Sahil Singh Diwan                             |
 | Location   | Bengaluru, India                              |
 | Phone      | +91 800-7192-680                              |
-| Email      | diwan.sahilsingh@gmail.com                    |
+| Email      | `diwan.sahilsingh@gmail.com` (the `h` is mandatory) |
 | GitHub     | https://github.com/SahilSinghDiwan            |
 | LinkedIn   | https://www.linkedin.com/in/diwan-sahil/      |
 | WhatsApp   | https://wa.me/918007192680                    |
 
-## Hero Tagline
+### Hero
 
 - H1: **AI / GenAI Engineer**
 - Sub-H1: *Architecting end-to-end AI solutions*
 - Lede: *5+ years building RAG pipelines, scalable microservices, and production-grade GenAI systems with vector databases, Kafka, Airflow, and Kubernetes.*
 
-## About — Stats Grid (6 boxes, 2×3)
+### About — stats grid (6 boxes, 2×3)
 
-1. **5+** — Years Experience
-2. **10+** — Corporate Projects
-3. **99.9%** — Uptime Achieved
-4. **40–60%** — MTTR Reduction
-5. **200+** — SREs Supported
-6. **90%** — RCA Accuracy
+5+ years experience · 10+ corporate projects · 99.9% uptime · 40–60% MTTR reduction · 200+ SREs supported · 90% RCA accuracy.
 
-## Skills (`skills` object)
+### Skills
 
 | Category                    | Items |
 |-----------------------------|-------|
@@ -91,55 +113,41 @@ All inside `src/pages/Index.tsx`. Each section is a `<section id="...">` and is 
 | Frontend (Basic)            | React, TypeScript, JavaScript, Vue.js, Tailwind CSS |
 | Tools                       | Git, Vercel, Supabase, Jest |
 
-> Note: the AI / GenAI, Vector Search, Backend, Cloud, Databases, Frontend, and Tools categories include items beyond what's on the resume (e.g., LlamaIndex, DeepSpeed, ONNX, TensorRT, Pinecone, GraphQL, PostgreSQL, Vue.js, Vercel, Supabase, Jest). These are kept on the website by user preference; user will prune later.
+### Projects
 
-## Projects (`projects` array — 6 entries, non-interactive)
+Card shape: `{ title, description, technologies[], impact, category, slug, pinned?, demoUrl?, githubUrl? }`. Three projects are flagged `pinned: true` and surface in `PinnedProjects` on `/projects`.
 
-Card shape: `{ title, description, technologies[], impact, category }`. **No `github` / `liveDemo` fields.** Cards have no action buttons because all of these are proprietary client deployments. Company / client names are intentionally omitted from titles.
+1. **Incident Resolution Assistant** — *GenAI / Microservices*. Python microservices + ServiceNow integration; scaled 20-user POC → 200+ SREs.
+2. **Real-Time Log Analysis Pipeline** — *Performance Optimization*. Apache Kafka + Elasticsearch; 90% RCA accuracy, 40–60% MTTR reduction.
+3. **Hybrid Retrieval System** — *Advanced Retrieval*. FAISS + Elasticsearch on Kubernetes; recall 30% → 80%+.
+4. **Cloud-Native Anomaly Detection** — *MLOps*. Apache Airflow on Kubernetes for data-center-scale datasets.
+5. **RAG Chatbot with Live Internet Access** — *RAG Architecture*. LangChain + RAG on Microsoft Azure; ~50% better response quality, near-zero hallucination. (Internally Convogene.ai — name omitted on site.)
+6. **Multimodal AI Generation** — *Multimodal AI*. Fine-tuned instruct-pix2pix; end-to-end ownership. (Internally EROS NOW — name omitted.)
 
-1. **Incident Resolution Assistant** — *GenAI / Microservices*
-   - Python microservices platform, ITSM integration, scaled 20-user POC → 200+ SREs.
-   - Tech: Python, Microservices, Kubernetes, Helm. Impact: Scaled POC → production for 200+ SREs.
-2. **Real-Time Log Analysis Pipeline** — *Performance Optimization*
-   - Event-driven log fetching with automated RCA.
-   - Tech: Apache Kafka, Elasticsearch, Python. Impact: 90% RCA accuracy, 40–60% MTTR reduction.
-3. **Hybrid Retrieval System** — *Advanced Retrieval*
-   - Hybrid retrieval to overcome data ambiguity, K8s + Helm full-stack deploy.
-   - Tech: FAISS, Elasticsearch, Kubernetes, Helm. Impact: Recall 30% → 80%+.
-4. **Cloud-Native Anomaly Detection** — *MLOps*
-   - Airflow + K8s pipelines for data-center-scale datasets.
-   - Tech: Apache Airflow, Kubernetes, Python. Impact: Data-center-scale processing.
-5. **RAG Chatbot with Live Internet Access** — *RAG Architecture*
-   - Customized RAG with live internet enrichment, deployed on Microsoft Azure (was internally referred to as Convogene.ai — name omitted on site).
-   - Tech: LangChain, RAG, Microsoft Azure, Python. Impact: 50% better response quality, near-zero hallucination.
-6. **Multimodal AI Generation** — *Multimodal AI*
-   - End-to-end ownership; fine-tuned an instruct-pix2pix model (was the EROS NOW solution — name omitted on site).
-   - Tech: PyTorch, instruct-pix2pix, Fine-Tuning. Impact: Successful fine-tune & rollout.
+> Project cards on `/` are intentionally non-interactive (no Live Demo / Code links) because the listed projects are proprietary client deployments. The `/projects` page also surfaces a GitHub auto-feed for OSS work.
 
-> User has more projects to add later — these will be appended to the `projects` array.
+### Experience
 
-## Experience (`experience` array — 3 entries, real company names kept)
+1. **Software Engineer - AI** @ **Infobell IT Solutions** — Bengaluru, India — *March 2024 – Present*.
+2. **Master Trainer - AI & Python** @ **India STEM Foundation** — Remote & On-site — *Aug 2022 – Aug 2023*.
+3. **Junior Software Developer** @ **Koderoom** — Bengaluru, India — *June 2020 – June 2022*.
 
-Card shape: `{ role, company, location, period, bullets[] }`.
+### Education
 
-1. **Software Engineer - AI** @ **Infobell IT Solutions** — Bengaluru, India — *March 2024 - Present* (6 bullets covering all the project work above).
-2. **Master Trainer - AI & Python** @ **India STEM Foundation** — Remote & On-site, India — *August 2022 - August 2023* (3 bullets).
-3. **Junior Software Developer** @ **Koderoom** — Bengaluru, India — *June 2020 - June 2022* (3 bullets).
+1. **C-DAC** — Post Graduate Training Program (6 mo) — *Sep 2023 – Feb 2024*.
+2. **G H Raisoni Academy of Engineering and Technology** — PG Diploma in Industrial Robotics — *2019 – Feb 2022*.
+3. **G H Raisoni Academy of Engineering and Technology** — B.E. Mechanical Engineering — *2014 – 2018*.
 
-## Education (`education` array — 3 entries)
-
-1. **C-DAC** — Post Graduate Training Program (6 Months) — *Sep 2023 - Feb 2024*.
-2. **G H Raisoni Academy of Engineering and Technology** — Post Graduate Diploma in Industrial Robotics — Nagpur, India — *2019 - Feb 2022*.
-3. **G H Raisoni Academy of Engineering and Technology** — Bachelor of Engineering (B.E.), Mechanical Engineering — Nagpur, India — *2014 - 2018*.
-
-## Certifications & Publications (`certifications` array — 2 entries)
+### Certifications & Publications
 
 1. **IBM Cloud Advocate Essentials** — Issued December 2025.
-2. **IEEE Publication** — Research paper on the design and mechanics of a Hexapod Robot (2019).
+2. **IEEE Publication** — Hexapod Robot design and mechanics paper (2019).
 
-## Unified Card Template
+---
 
-**Every** content card on the page (Skills, Projects, Experience, Education, Certifications, Contact) uses the same visual structure — copied from the Featured Projects card:
+## 3. Design system — Unified Card Template
+
+Every content card on the landing page uses the same shape, copied from the Featured Projects card:
 
 ```jsx
 <Card className="h-full flex flex-col">
@@ -163,162 +171,131 @@ Card shape: `{ role, company, location, period, bullets[] }`.
 </Card>
 ```
 
-| Section        | top badge       | title           | subtitle              | accent box                        | bottom tags    |
-|----------------|-----------------|-----------------|-----------------------|-----------------------------------|----------------|
-| Projects       | category        | project title   | description           | "Impact" → impact                 | technologies   |
-| Skills         | "{N} skills"    | category name   | (none)                | (none)                            | skill list     |
-| Experience     | period          | role            | `${company} · ${location}` | "Highlights" → bullet list   | tech stack     |
-| Education      | period          | degree          | institution           | duration → location               | subject tags   |
-| Certifications | "Certification" / "Publication" | name | issuer | `detailLabel` → detail | topical tags   |
-| Contact        | type            | label (Email…)  | description           | `detailLabel` → detail            | nature tags    |
+| Section        | top badge       | title           | subtitle                    | accent box                        | bottom tags    |
+|----------------|-----------------|-----------------|-----------------------------|-----------------------------------|----------------|
+| Projects       | category        | project title   | description                 | "Impact" → impact                 | technologies   |
+| Skills         | "{N} skills"    | category name   | (none)                      | (none)                            | skill list     |
+| Experience     | period          | role            | `${company} · ${location}`  | "Highlights" → bullet list        | tech stack     |
+| Education      | period          | degree          | institution                 | duration → location               | subject tags   |
+| Certifications | "Certification" / "Publication" | name | issuer | `detailLabel` → detail | topical tags |
+| Contact        | type            | label           | description                 | `detailLabel` → detail            | nature tags    |
 
-When adding any new card to the site, follow the table above to fill in each slot.
+### Card truncation (oversized cards)
 
-## Standard Card Size & Truncation
-
-The **Projects card** is the canonical "standard size":
-- ~1-line title
-- ~3-line description
-- 1 accent box (label + ~1-line body)
-- 1 row of secondary badges
-
-Cards that would naturally exceed this size are truncated to roughly the standard size, with a click-to-expand toggle inside the card. **Hover does nothing** — toggle is click-only for accessibility (works on touch devices).
+The Projects card is the canonical "standard size". Cards that would otherwise exceed it use **click-to-expand inside the card** — never hover (touch-device accessibility).
 
 | Section    | Default shown                                     | Toggle label                                | State key       |
 |------------|---------------------------------------------------|---------------------------------------------|-----------------|
 | Experience | First **2** bullets in the Highlights accent box  | `Show {N} more highlights` / `Show less`    | `exp-{index}`   |
 | Skills     | First **8** badges                                | `+{N} more` / `Show less`                   | `skill-{category}` |
 
-Constants live at the top of `src/pages/Index.tsx`:
-- `EXPERIENCE_BULLET_PREVIEW_COUNT = 2`
-- `SKILL_PREVIEW_COUNT = 8`
-
-Toggle state is held by a single hook in `Index`:
-```ts
-const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-const isExpanded = (key: string) => Boolean(expanded[key]);
-const toggleExpanded = (key: string) => setExpanded(prev => ({ ...prev, [key]: !prev[key] }));
-```
-
-Projects, Education, Certifications, and Contact cards already fit within the standard size and do not need truncation.
-
-## Conventions / Decisions
-
-- **Single source of truth for content**: all data lives as plain JS arrays/objects at the top of `src/pages/Index.tsx` (`projects`, `skills`, `experience`, `education`, `credentials`, `contacts`). Add new entries there.
-- **Theme**: light / dark, persisted in `localStorage` under key `theme`. Toggle in nav.
-- **Routing**: HashRouter — URLs look like `/#/...`. Section nav uses anchor scrolling, not routes.
-- **No analytics, no forms, no backend** — purely static.
-- **Project cards are intentionally non-interactive** because all featured projects are proprietary client deployments; do not add Live Demo / Code buttons to existing entries unless the user explicitly opens-sources one.
-- **Company names policy**: company names allowed in the **Experience** section; **omitted** from project titles/descriptions.
-- **Email**: always `diwan.sahilsingh@gmail.com` (with the `h`). The earlier `diwan.sahilsing@gmail.com` was a typo and has been removed.
-
-## How to Add a New Project Later
-
-Append an object to the `projects` array in `src/pages/Index.tsx`:
-
-```ts
-{
-  title: "<Project Title — no client name>",
-  description: "<2 sentences, no client name>",
-  technologies: ["Tech1", "Tech2"],
-  impact: "<one quantified line>",
-  category: "<short tag, e.g. 'RAG Architecture'>"
-}
-```
-
-If a future project is open-sourced and should be linkable, add `github` and/or `liveDemo` fields and re-introduce the action buttons in the projects card JSX (currently removed).
-
-## How to Run
-
-```bash
-cd /home/sahil/projects/profile-website
-npm install
-npm run dev      # dev server
-npm run build    # production build (tsc -b && vite build)
-npm run preview  # preview built bundle
-npm run lint     # eslint
-```
-
-Preferred dev workflow is **Docker** (a long-running container named `profile-website-dev` is bind-mounted to the repo and runs `npm run dev`). Avoid `docker exec` for one-off type/lint checks if it would kill the dev container — use a separate `docker run` instead.
+Constants: `EXPERIENCE_BULLET_PREVIEW_COUNT = 2`, `SKILL_PREVIEW_COUNT = 8` (top of `src/pages/Index.tsx`).
 
 ---
 
-## Conversation Handoff Notes (for resuming with another model)
+## 4. Backend internals
 
-These are the gotchas and decisions accumulated across earlier sessions. Read this before making changes.
+### `/api/chat`
 
-### CRITICAL: `src/index.css` is precompiled Tailwind — NOT a source file
+`api/src/routes/chat.ts` flow:
 
-- `src/index.css` (~2533 lines) is precompiled Tailwind v3 output. It contains **only the utilities that were generated when it was built** — many common Tailwind classes are missing.
-- `vite.config.ts` does **not** register the Tailwind v4 vite plugin, even though `@tailwindcss/vite` and `tailwindcss` v4 are in `package.json`. So adding new utility classes in JSX will **silently no-op** if those classes aren't already in `index.css`.
-- The workaround in use: `src/typography.css` (loaded after `index.css` in `src/main.tsx`) holds the Inter font setup **plus shim CSS rules for any utility class needed by JSX that's missing from `index.css`**.
+1. Parse JSON body. Accept either `{messages: [{role, content}, …], turnstileToken}` (multi-turn) or `{question, turnstileToken}` (legacy single-turn). Hard-cap at 12 turns × 2000 chars per turn.
+2. `turnstileToken` required → 401 `missing_turnstile_token` if absent.
+3. Verify Turnstile via `verifyTurnstile()` — bypassed only when `env.ENV === "dev"` *and* request has `?dev=1`.
+4. Rate-limit by IP (10/60s).
+5. SHA-256 cache key on `JSON.stringify(turns) + CORPUS_VERSION` (currently `v3`). Hit returns 200 `text/event-stream` with `X-Cache-Status: hit`.
+6. Embed the **last user turn** via OpenAI `text-embedding-3-small`.
+7. Cosine-rank against bundled `corpus.json`. If top score < `RELEVANCE_THRESHOLD` (0.15), return the canned off-topic refusal and cache it.
+8. Stream a completion from `gpt-5-nano` with the full turn list (system + context + history). Reasoning-model parameters: `max_completion_tokens: 800`, `reasoning_effort: "minimal"` (the model rejects `max_tokens` and consumes the whole budget on reasoning without the minimal effort).
+9. SSE parsing buffers across TCP chunk boundaries to avoid dropping leading characters when JSON straddles a chunk. Final response cached for 7 days.
 
-**Confirmed-missing utilities that have been shimmed into `typography.css`** (do not assume Tailwind classes work — grep `src/index.css` first, and if missing, add a plain CSS rule to `typography.css`):
+### Frontend chat widget — Portfolio Assistant
 
+`src/components/ResumeChat.tsx`:
+
+- Floating bot icon → 380×520 panel with suggested chips (only on first message), full transcript with user/assistant bubbles, markdown-rendered assistant replies, three-dot bouncing typing indicator while waiting for the first token, "Ask a follow-up…" placeholder once a conversation starts.
+- Turnstile widget loaded lazily and rendered once per session. The wrapper hides via CSS once a token is present (kept in DOM so reset works without remount). After every send, the widget is reset so the next request gets a fresh single-use token; a `sendingRef` guard prevents accidental double-clicks.
+- `useChat` hook owns the conversation: `turns: ChatTurn[]`, `streaming: string`, `isThinking`, `isLoading`, `error`. On error the optimistic user turn is rolled back so a failed question doesn't poison the next retry.
+- If `VITE_TURNSTILE_SITE_KEY` is empty at build time, an amber banner replaces the input area: *"Chat is unavailable: VITE_TURNSTILE_SITE_KEY is missing from the build environment."*
+- `src/lib/api.ts` `API_BASE` is sanitized with `.trim().replace(/\/$/, "")` because Vercel's env UI sometimes carries trailing whitespace and `%20%20` ends up in URLs (`net::ERR_NAME_NOT_RESOLVED`).
+
+---
+
+## 5. Conventions
+
+- **Email**: always `diwan.sahilsingh@gmail.com` (with the `h`). The earlier `diwan.sahilsing@…` typo is fixed and must not return.
+- **Project cards on `/` are non-interactive** — the listed projects are proprietary client work. Don't add Live Demo / Code buttons on existing entries unless the user explicitly open-sources one. Open-source work goes in the `/projects` GitHub auto-feed.
+- **Company names policy**: company names are allowed in the **Experience** section; **omitted** from project titles and descriptions.
+- **All sections share the Unified Card Template** (§3). Don't introduce one-off card layouts.
+- **Oversized cards truncate with click-to-expand**, not hover.
+- **Spacing**: prefer `gap-*`. Don't use `space-x-*` / `space-y-*` — historical regressions.
+- **Browser tab title**: `"Sahil Singh Diwan — AI / GenAI Engineer"`.
+- **Theme**: light/dark, persisted in `localStorage` under key `theme`. Toggle in nav.
+- **Section nav** on `/` uses smooth-scroll anchors. From other routes, the nav navigates to `/#section` first, then scrolls.
+
+---
+
+## 6. Operational reference
+
+### Vercel project (`profile-website`, id `prj_DqytaaeHohbvQHe7bRvKsOvUv1uP`)
+
+- Branches: `main` → production, `dev` → preview.
+- Env vars (set on Preview *and* Production):
+  - `VITE_API_BASE_URL` — `https://profile-api-dev.diwan-sahilsingh.workers.dev` for preview, the prod URL for production.
+  - `VITE_TURNSTILE_SITE_KEY` — `0x4AAAAAADFhkVYoGHa2wMUp` (23 chars; an extra trailing `w` was a previous typo that produced Turnstile error 400020).
+- `.npmrc` ships `legacy-peer-deps=true` so Vercel installs succeed under React 19.
+- SPA fallback: `vercel.json` rewrites `/(.*)` → `/`.
+- Manage via API: `GET/PATCH /v9/projects/profile-website` (use `VERCEL_TOKEN`).
+
+### Worker (`api/wrangler.toml`)
+
+- Default env → production worker `profile-api`.
+- `[env.dev]` → `profile-api-dev`. Vars: `PORTFOLIO_ORIGIN` is comma-separated allowlist; `ENV=dev`.
+- KV namespaces (dev): `CACHE` `a5b1cffbd20a4099a9868ef9ee053f0a`, `RATE_LIMIT` `d12f22be19c443128be8096623ce5cee`. Production needs its own pair — create with `wrangler kv:namespace create CACHE/RATE_LIMIT` and update the default `[[kv_namespaces]]` block before deploying to prod.
+- Secrets (set per env via `wrangler secret put <NAME> --env dev` from inside the api Docker image):
+  - `OPENAI_API_KEY`
+  - `TURNSTILE_SECRET_KEY` — must pair with the sitekey above.
+
+### Cloudflare Turnstile widget
+
+- Sitekey `0x4AAAAAADFhkVYoGHa2wMUp`, mode `managed`, allowed domains `nostalkers.shop` + the dev Vercel preview. Add `localhost` *temporarily* if you need to run automated tests against `http://localhost:5173`.
+- Manage via API: `GET/PUT /accounts/{CLOUDFLARE_ACCOUNT_ID}/challenges/widgets[/{sitekey}]`.
+
+### Pi-specific quirks
+
+- `wrangler dev` and `vitest` for the Worker both crash on this 32-bit-VA Pi (`workerd` tcmalloc OOM at startup). All Worker commands therefore use `docker compose run --rm --no-deps api npx wrangler …`.
+- Worker tests can only run on real Cloudflare or on x86_64 Linux.
+- `docker compose up api` will fail. `docker compose up web` works fine when the frontend points at a deployed Worker.
+
+### Common commands
+
+```bash
+# Frontend dev pointed at deployed dev worker
+VITE_API_BASE_URL=https://profile-api-dev.diwan-sahilsingh.workers.dev \
+  docker compose up web
+
+# Deploy worker (dev or prod)
+docker compose run --rm --no-deps \
+  -e CLOUDFLARE_API_TOKEN -e CLOUDFLARE_ACCOUNT_ID \
+  api npx wrangler deploy --env dev      # or omit --env for prod
+
+# Regenerate the RAG corpus from data/resume.md
+docker compose run --rm \
+  -e OPENAI_API_KEY -v "$(pwd)/data:/repo-data:ro" \
+  --no-deps api npx tsx scripts/build-embeddings.ts
+# then bump CORPUS_VERSION in api/src/lib/cache.ts and redeploy.
+
+# Frontend tests / build / typecheck
+docker compose run --rm web npm test
+docker compose run --rm web npm run build
+docker compose run --rm web npx tsc --noEmit
 ```
-pt-32 pt-40 pt-48 pb-24 pb-32 py-20 py-24
-mb-5 mb-10 mt-3 mt-6
-tabular-nums w-16 flex-shrink-0 gap-10 gap-14
-md:pt-40 md:pt-48 md:pb-24 md:pb-32 md:py-20 md:py-24 md:mb-10 md:mt-6
-group-focus-visible:opacity-100
-section[id] { scroll-margin-top: 4rem }
-```
 
-If you add a class in JSX and the visual change doesn't appear:
-1. `Grep` for `\.<classname>` in `src/index.css`. If absent → add to `typography.css`.
-2. For `md:` variants, wrap inside `@media (min-width: 768px) { .md\:<class> { ... } }`.
+---
 
-### Header / section overlap
+## 7. Pointers
 
-Nav is `fixed`, `h-16` (4rem). To make section tops sit flush against the header bottom on click-scroll, `typography.css` sets `section[id] { scroll-margin-top: 4rem }`. Don't change this to 6rem — the user explicitly wants no visible gap.
-
-### Hero padding
-
-Hero `<section>` uses `pt-40 pb-24 md:pt-48 md:pb-32`. These are shimmed in `typography.css`. If the H1 ever appears under the nav again, check that those shim rules still exist.
-
-### Get In Touch — current design
-
-Replaced earlier 3-column card grid with a centered row of circular icon buttons:
-
-```jsx
-<div className="flex flex-wrap justify-center items-center gap-10 sm:gap-14">
-  {contacts.map((c) => (
-    <a className="group flex flex-col items-center text-center" ...>
-      <div className="flex flex-shrink-0 items-center justify-center w-16 h-16 aspect-square rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
-        <Icon className="w-7 h-7" />
-      </div>
-      <div className="mt-3 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-300">
-        <div className="text-sm font-medium text-primary">{c.label}</div>
-        <div className="text-xs text-muted-foreground break-all">{c.detail}</div>
-      </div>
-    </a>
-  ))}
-</div>
-```
-
-Label/detail under each icon is **hidden by default** and fades in on hover or keyboard focus. **Don't** revert to cards or to always-visible labels — both have been explicitly rejected.
-
-### Spacing rule the user explicitly enforced
-
-Use `gap-*` for nav and inline groups, **not** `space-x-*` / `space-y-*`. Past attempts with `space-x-6` rendered with no spacing in this precompiled CSS. Current nav uses `gap-6` desktop, `gap-3` mobile column, `gap-2` mobile actions, footer `gap-4`.
-
-### User feedback recorded so far
-
-- Email is `diwan.sahilsingh@gmail.com` — the `h` is mandatory (a missing-`h` typo existed earlier).
-- Project cards must be **non-interactive** (no live demo / code links) because all current projects are proprietary client deployments. Company names belong in Experience, **not** in project titles/descriptions.
-- All sections use the **same Featured-Projects card template** (see Unified Card Template table above).
-- Oversized cards (Experience bullets, Skills) **truncate with click-to-expand**, not hover.
-- Browser tab title must be professional — currently `"Sahil Singh Diwan — AI / GenAI Engineer"`.
-- Typography must be "professional and homogenous" — Inter font, tightened heading letter-spacing, generous line-height (~1.65 body, ~1.7 paragraphs). Lives in `typography.css`.
-
-### Last commit on `main`
-
-`9d2d27c feat: Refresh website with resume content, typography polish, and contact icons` — pushed to `origin/main`. The repo is otherwise clean.
-
-### Files to read first when resuming
-
-1. `src/pages/Index.tsx` — single page, all sections + content data live here.
-2. `src/typography.css` — font + ALL shim utilities. Always check this before touching layout.
-3. `src/index.css` — precompiled Tailwind; treat as read-only reference for what classes already exist.
-4. `index.html` — title, meta, Inter font preconnect.
-5. This file (`docs/website-overview.md`).
+- `docs/Portfolio v2 implementation plan.md` — the original TDD plan that drove the v2 rebuild (kept for historical reference).
+- `docs/content-management-plan.md` — proposal for moving content out of code so non-developers can edit projects/skills/etc. Awaiting decision before implementation.
+- `docs/conversations-history.md` — running execution log of the v2 build sessions, including bug fixes and the dev-environment hardening.
+- `DEV.md` — full Docker workflow.

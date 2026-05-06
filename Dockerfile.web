@@ -1,0 +1,13 @@
+# Frontend dev container — Vite with HMR
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install deps based on lockfile (better cache)
+COPY package.json package-lock.json* ./
+# RUN npm install --include=dev
+RUN npm install --include=dev --legacy-peer-deps
+
+# App source is bind-mounted in docker-compose for hot reload
+EXPOSE 5173
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

@@ -1,0 +1,12 @@
+node_modules
+.npm
+.local
+dist
+.git
+.env
+.env.local
+api/node_modules
+api/.wrangler
+test-results
+**/.DS_Store
+*.log

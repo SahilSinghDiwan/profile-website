@@ -1,0 +1,39 @@
+name = "profile-api"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+PORTFOLIO_ORIGIN = "http://localhost:5173"
+ENV = "dev"
+
+# Top-level KV bindings — used by `wrangler dev` (local Miniflare).
+# IDs are placeholders; local dev uses in-memory KV.
+[[kv_namespaces]]
+binding = "CACHE"
+id = "REPLACE_WITH_KV_ID"
+preview_id = "REPLACE_WITH_PREVIEW_KV_ID"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "REPLACE_WITH_KV_ID"
+preview_id = "REPLACE_WITH_PREVIEW_KV_ID"
+
+# ---- Dev (deployed Worker: profile-api-dev) ----
+# Deploy:       wrangler deploy --env dev
+# Set secrets:  wrangler secret put OPENAI_API_KEY --env dev
+#               wrangler secret put TURNSTILE_SECRET_KEY --env dev
+[env.dev]
+name = "profile-api-dev"
+
+[env.dev.vars]
+PORTFOLIO_ORIGIN = "http://localhost:5173,https://profile-website-git-dev-sahils-projects-22d5c9eb.vercel.app,https://myprofile.nostalkers.shop,https://nostalkers.shop,https://profile-website-orcin.vercel.app"
+ENV = "dev"
+
+[[env.dev.kv_namespaces]]
+binding = "CACHE"
+id = "a5b1cffbd20a4099a9868ef9ee053f0a"
+
+[[env.dev.kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "d12f22be19c443128be8096623ce5cee"
