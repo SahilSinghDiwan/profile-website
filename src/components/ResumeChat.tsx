@@ -1,8 +1,38 @@
 import { useState, useEffect, useRef } from "react";
-import { MessageCircle, Send, X } from "lucide-react";
+import { Bot, Send, X } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import type { Components } from "react-markdown";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { useChat } from "../hooks/useChat";
+import { cn } from "../lib/utils";
+
+const markdownComponents: Components = {
+  p: ({ children }) => <p className="my-2 leading-relaxed first:mt-0 last:mb-0">{children}</p>,
+  ul: ({ children }) => <ul className="my-2 list-disc space-y-1 pl-5">{children}</ul>,
+  ol: ({ children }) => <ol className="my-2 list-decimal space-y-1 pl-5">{children}</ol>,
+  li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+  h1: ({ children }) => <h3 className="mt-3 mb-1 text-sm font-semibold">{children}</h3>,
+  h2: ({ children }) => <h3 className="mt-3 mb-1 text-sm font-semibold">{children}</h3>,
+  h3: ({ children }) => <h3 className="mt-3 mb-1 text-sm font-semibold">{children}</h3>,
+  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+  code: ({ children }) => (
+    <code className="rounded bg-black/10 px-1 py-0.5 font-mono text-[0.85em] dark:bg-white/10">{children}</code>
+  ),
+  pre: ({ children }) => (
+    <pre className="my-2 overflow-x-auto rounded-md bg-gray-900 p-2 font-mono text-xs text-gray-100">{children}</pre>
+  ),
+  a: ({ href, children }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-primary underline underline-offset-2 hover:no-underline"
+    >
+      {children}
+    </a>
+  ),
+};
 
 const SUGGESTED_QUESTIONS = [
   "What's Sahil's experience with Kafka?",
@@ -155,9 +185,9 @@ export function ResumeChat({ getTurnstileToken: externalGetToken }: ResumeChatPr
         onClick={() => setIsOpen(true)}
         className="fixed bottom-6 right-6 h-12 w-12 rounded-full shadow-lg"
         size="icon"
-        aria-label="Open chat"
+        aria-label="Open AI assistant"
       >
-        <MessageCircle className="h-6 w-6" />
+        <Bot className="h-6 w-6" />
       </Button>
 
       {/* Chat panel */}
@@ -168,12 +198,15 @@ export function ResumeChat({ getTurnstileToken: externalGetToken }: ResumeChatPr
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-800">
-            <h2 className="font-semibold">Resume Chat</h2>
+            <div className="flex items-center gap-2">
+              <Bot className="h-5 w-5 text-primary" />
+              <h2 className="font-semibold">Portfolio Assistant</h2>
+            </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={handleClose}
-              aria-label="Close chat"
+              aria-label="Close assistant"
               className="h-6 w-6"
             >
               <X className="h-4 w-4" />
@@ -210,7 +243,7 @@ export function ResumeChat({ getTurnstileToken: externalGetToken }: ResumeChatPr
 
             {message && (
               <div className="rounded-lg bg-blue-50 p-3 text-sm dark:bg-blue-950 dark:text-blue-100">
-                {message}
+                <ReactMarkdown components={markdownComponents}>{message}</ReactMarkdown>
                 <div ref={messagesEndRef} />
               </div>
             )}
@@ -224,7 +257,7 @@ export function ResumeChat({ getTurnstileToken: externalGetToken }: ResumeChatPr
               </div>
             )}
             {turnstileRequired && (
-              <div className="mb-2 flex flex-col items-center gap-1">
+              <div className={cn("mb-2 flex flex-col items-center gap-1", !turnstileMissing && "hidden")}>
                 <div ref={turnstileContainerRef} />
                 {turnstileMissing && (
                   <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -260,7 +293,7 @@ export function ResumeChat({ getTurnstileToken: externalGetToken }: ResumeChatPr
 
           {/* Footer */}
           <div className="border-t border-gray-200 px-4 py-3 text-center text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">
-            Powered by Sahil's resume + GPT-4o-mini
+            Trained on Sahil's resume · Answers may be imperfect
           </div>
         </div>
       )}
