@@ -20,8 +20,15 @@ export class RateLimitError extends ApiError {
   }
 }
 
+export type ChatRole = "user" | "assistant";
+
+export interface ChatTurn {
+  role: ChatRole;
+  content: string;
+}
+
 interface ChatRequest {
-  question: string;
+  messages: ChatTurn[];
   turnstileToken: string;
 }
 
@@ -58,11 +65,11 @@ async function checkResponse(res: Response): Promise<void> {
   throw new ApiError(message, res.status);
 }
 
-export async function* chat({ question, turnstileToken }: ChatRequest): AsyncGenerator<string> {
+export async function* chat({ messages, turnstileToken }: ChatRequest): AsyncGenerator<string> {
   const res = await fetch(`${API_BASE}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question, turnstileToken }),
+    body: JSON.stringify({ messages, turnstileToken }),
   });
   await checkResponse(res);
   const reader = res.body?.getReader();

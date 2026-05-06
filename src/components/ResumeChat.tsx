@@ -88,7 +88,7 @@ export function ResumeChat({ getTurnstileToken: externalGetToken }: ResumeChatPr
     }
   };
 
-  const { message, error, isLoading, retryAfter, sendMessage, reset } = useChat({
+  const { turns, streaming, isLoading, isThinking, error, retryAfter, sendMessage, reset } = useChat({
     getTurnstileToken: getToken,
     onSettled: resetTurnstile,
   });
@@ -127,10 +127,10 @@ export function ResumeChat({ getTurnstileToken: externalGetToken }: ResumeChatPr
     document.head.appendChild(script);
   }, [isOpen, externalGetToken]);
 
-  // Scroll to bottom when message updates
+  // Scroll to bottom whenever the conversation grows or new tokens arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [message]);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [turns, streaming, isThinking]);
 
   // Countdown timer for rate limit
   useEffect(() => {
@@ -176,7 +176,7 @@ export function ResumeChat({ getTurnstileToken: externalGetToken }: ResumeChatPr
     setTurnstileToken("");
   };
 
-  const showSuggestions = !message && !error;
+  const showSuggestions = turns.length === 0 && !streaming && !isLoading && !error;
 
   return (
     <>
@@ -234,19 +234,61 @@ export function ResumeChat({ getTurnstileToken: externalGetToken }: ResumeChatPr
               </div>
             )}
 
-            {error && (
-              <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-200">
-                {error}
-                {countdown > 0 && <span className="ml-1 font-semibold">{countdown}</span>}
-              </div>
-            )}
+            <div className="space-y-3">
+              {turns.map((turn, idx) => (
+                <div
+                  key={idx}
+                  className={cn(
+                    "flex",
+                    turn.role === "user" ? "justify-end" : "justify-start"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "max-w-[85%] rounded-lg p-3 text-sm",
+                      turn.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-blue-50 text-gray-900 dark:bg-blue-950 dark:text-blue-100"
+                    )}
+                  >
+                    {turn.role === "assistant" ? (
+                      <ReactMarkdown components={markdownComponents}>{turn.content}</ReactMarkdown>
+                    ) : (
+                      <p className="whitespace-pre-wrap leading-relaxed">{turn.content}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
 
-            {message && (
-              <div className="rounded-lg bg-blue-50 p-3 text-sm dark:bg-blue-950 dark:text-blue-100">
-                <ReactMarkdown components={markdownComponents}>{message}</ReactMarkdown>
-                <div ref={messagesEndRef} />
-              </div>
-            )}
+              {isThinking && (
+                <div className="flex justify-start" aria-live="polite" aria-label="Assistant is thinking">
+                  <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
+                    <div className="flex items-center gap-1">
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-blue-400 [animation-delay:-0.3s] dark:bg-blue-300" />
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-blue-400 [animation-delay:-0.15s] dark:bg-blue-300" />
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-blue-400 dark:bg-blue-300" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!isThinking && streaming && (
+                <div className="flex justify-start">
+                  <div className="max-w-[85%] rounded-lg bg-blue-50 p-3 text-sm text-gray-900 dark:bg-blue-950 dark:text-blue-100">
+                    <ReactMarkdown components={markdownComponents}>{streaming}</ReactMarkdown>
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-200">
+                  {error}
+                  {countdown > 0 && <span className="ml-1 font-semibold">{countdown}s</span>}
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
           </div>
 
           {/* Input area */}
@@ -268,7 +310,13 @@ export function ResumeChat({ getTurnstileToken: externalGetToken }: ResumeChatPr
             )}
             <div className="flex gap-2">
               <Input
-                placeholder={turnstileMissing ? "Complete the challenge first…" : "Ask about Sahil's experience..."}
+                placeholder={
+                  turnstileMissing
+                    ? "Complete the challenge first…"
+                    : turns.length === 0
+                      ? "Ask about Sahil's experience…"
+                      : "Ask a follow-up…"
+                }
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={(e) => {

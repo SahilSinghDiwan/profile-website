@@ -19,6 +19,14 @@ interface Corpus {
   chunks: Chunk[];
 }
 
+interface ChatTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+const MAX_TURNS = 12;
+const MAX_TURN_CHARS = 2000;
+
 const corpus = bundledCorpus as Corpus;
 
 function cosineSimilarity(a: number[], b: number[]): number {
@@ -55,12 +63,34 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
   }
 
   const chatReq = body as Record<string, unknown>;
-  const question = chatReq.question as string;
   const turnstileToken = chatReq.turnstileToken as string;
 
-  if (!question || typeof question !== "string") {
+  // Accept either a multi-turn `messages` array or a legacy single `question`.
+  let turns: ChatTurn[];
+  if (Array.isArray(chatReq.messages)) {
+    turns = (chatReq.messages as unknown[])
+      .filter((t): t is ChatTurn => {
+        if (!t || typeof t !== "object") return false;
+        const x = t as { role?: unknown; content?: unknown };
+        return (
+          (x.role === "user" || x.role === "assistant") &&
+          typeof x.content === "string" &&
+          x.content.length > 0
+        );
+      })
+      .slice(-MAX_TURNS)
+      .map((t) => ({ role: t.role, content: t.content.slice(0, MAX_TURN_CHARS) }));
+  } else if (typeof chatReq.question === "string" && chatReq.question.length > 0) {
+    turns = [{ role: "user", content: (chatReq.question as string).slice(0, MAX_TURN_CHARS) }];
+  } else {
+    turns = [];
+  }
+
+  const lastUserTurn = [...turns].reverse().find((t) => t.role === "user");
+  if (!lastUserTurn) {
     return new Response(JSON.stringify({ error: "missing_question" }), { status: 400 });
   }
+  const question = lastUserTurn.content;
 
   if (!turnstileToken || typeof turnstileToken !== "string") {
     return new Response(JSON.stringify({ error: "missing_turnstile_token" }), { status: 401 });
@@ -90,8 +120,9 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
     });
   }
 
-  // Cache check
-  const cacheKey_ = await cacheKey(question, CORPUS_VERSION);
+  // Cache key on the entire conversation so multi-turn chats don't collide
+  // with single-turn cache hits and follow-ups can still benefit when repeated.
+  const cacheKey_ = await cacheKey(JSON.stringify(turns), CORPUS_VERSION);
   const cache = createKvCache<string>(env.CACHE);
   const cached = await cache.get(cacheKey_);
   if (cached) {
@@ -149,7 +180,7 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
 
   const context = topChunks.join("\n\n");
   const systemPrompt =
-    "You are a Q&A assistant for Sahil Diwan's portfolio. Answer ONLY using the provided context. If unknown, say so.";
+    "You are a Q&A assistant for Sahil Diwan's portfolio. Answer ONLY using the provided context. If unknown, say so. Format replies in concise GitHub-flavored markdown — short paragraphs, bullet lists where helpful.";
 
   try {
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -163,7 +194,7 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
         messages: [
           { role: "system", content: systemPrompt },
           { role: "system", content: `Context:\n${context}` },
-          { role: "user", content: question },
+          ...turns,
         ],
         stream: true,
         max_completion_tokens: 800,

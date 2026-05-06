@@ -40,7 +40,7 @@ describe("ResumeChat", () => {
 
     render(<ResumeChat />);
 
-    const bubble = screen.getByLabelText("Open chat");
+    const bubble = screen.getByLabelText("Open AI assistant");
     await userEvent.click(bubble);
 
     const panel = screen.getByRole("dialog");
@@ -52,10 +52,10 @@ describe("ResumeChat", () => {
 
     render(<ResumeChat />);
 
-    const bubble = screen.getByLabelText("Open chat");
+    const bubble = screen.getByLabelText("Open AI assistant");
     await userEvent.click(bubble);
 
-    const closeButton = screen.getByLabelText("Close chat");
+    const closeButton = screen.getByLabelText("Close assistant");
     await userEvent.click(closeButton);
 
     const panel = screen.queryByRole("dialog");
@@ -67,7 +67,7 @@ describe("ResumeChat", () => {
 
     render(<ResumeChat />);
 
-    const bubble = screen.getByLabelText("Open chat");
+    const bubble = screen.getByLabelText("Open AI assistant");
     await userEvent.click(bubble);
 
     const chips = screen.getAllByRole("button");
@@ -81,7 +81,7 @@ describe("ResumeChat", () => {
 
     render(<ResumeChat getTurnstileToken={() => "test-token"} />);
 
-    const bubble = screen.getByLabelText("Open chat");
+    const bubble = screen.getByLabelText("Open AI assistant");
     await userEvent.click(bubble);
 
     // Find and click the first suggested question chip
@@ -102,10 +102,10 @@ describe("ResumeChat", () => {
 
     render(<ResumeChat getTurnstileToken={() => "test-token"} />);
 
-    const bubble = screen.getByLabelText("Open chat");
+    const bubble = screen.getByLabelText("Open AI assistant");
     await userEvent.click(bubble);
 
-    const input = screen.getByPlaceholderText("Ask about Sahil's experience...");
+    const input = screen.getByPlaceholderText("Ask about Sahil's experience…");
     await userEvent.type(input, "test question");
 
     const sendButton = screen.getByLabelText("Send message");
@@ -125,10 +125,10 @@ describe("ResumeChat", () => {
 
     render(<ResumeChat getTurnstileToken={() => "test-token"} />);
 
-    const bubble = screen.getByLabelText("Open chat");
+    const bubble = screen.getByLabelText("Open AI assistant");
     await userEvent.click(bubble);
 
-    const input = screen.getByPlaceholderText("Ask about Sahil's experience...");
+    const input = screen.getByPlaceholderText("Ask about Sahil's experience…");
     await userEvent.type(input, "test");
 
     const sendButton = screen.getByLabelText("Send message");
@@ -150,10 +150,10 @@ describe("ResumeChat", () => {
 
     render(<ResumeChat getTurnstileToken={() => "my-token-123"} />);
 
-    const bubble = screen.getByLabelText("Open chat");
+    const bubble = screen.getByLabelText("Open AI assistant");
     await userEvent.click(bubble);
 
-    const input = screen.getByPlaceholderText("Ask about Sahil's experience...");
+    const input = screen.getByPlaceholderText("Ask about Sahil's experience…");
     await userEvent.type(input, "test");
 
     const sendButton = screen.getByLabelText("Send message");
@@ -173,10 +173,10 @@ describe("ResumeChat", () => {
 
     render(<ResumeChat />);
 
-    const bubble = screen.getByLabelText("Open chat");
+    const bubble = screen.getByLabelText("Open AI assistant");
     await userEvent.click(bubble);
 
-    const footer = screen.getByText(/Powered by Sahil's resume/);
+    const footer = screen.getByText(/Trained on Sahil's resume/);
     expect(footer).toBeInTheDocument();
   });
 
@@ -185,14 +185,14 @@ describe("ResumeChat", () => {
 
     render(<ResumeChat getTurnstileToken={() => "token"} />);
 
-    const bubble = screen.getByLabelText("Open chat");
+    const bubble = screen.getByLabelText("Open AI assistant");
     await userEvent.click(bubble);
 
     // Should show suggestions initially
     let chips = screen.getAllByRole("button");
     expect(chips.length).toBeGreaterThan(1);
 
-    const input = screen.getByPlaceholderText("Ask about Sahil's experience...");
+    const input = screen.getByPlaceholderText("Ask about Sahil's experience…");
     await userEvent.type(input, "test");
 
     const sendButton = screen.getByLabelText("Send message");
