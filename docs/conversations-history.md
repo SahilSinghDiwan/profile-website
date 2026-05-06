@@ -1,6 +1,6 @@
 # Portfolio v2 — Conversation History & Resume Pointer
 
-> Read this first if you're a Claude (or human) picking up the work. It captures the full state of the implementation as of the latest session — what's done, what's broken, what's next.
+> **This is a chronicle, not a current-state doc.** For the deployed shape — architecture, content, conventions — read `docs/website-overview.md`. The notes below are a session-by-session execution log of how the v2 build came together; some sub-sections (especially "next planned work" and "outstanding") were accurate at the time of writing and have since been resolved.
 
 The authoritative implementation plan is **`docs/Portfolio v2 implementation plan.md`** (Phase 0, Wave 1–4, dispatch guide). This doc is the running execution log against that plan.
 

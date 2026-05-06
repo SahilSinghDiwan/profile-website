@@ -1,62 +1,56 @@
-# Personal Portfolio Website
+# Sahil Singh Diwan — Portfolio
 
-This is a personal portfolio website for Sahil Singh Diwan, an AI Engineer. It is built with React, TypeScript, and Vite, and styled with Tailwind CSS.
+Personal portfolio site at `nostalkers.shop`. Multi-page React app on Vercel + a Cloudflare Worker that serves a RAG-backed chat assistant trained on the resume corpus.
 
-## Overview
+## Surfaces
 
-The website showcases:
-- Professional skills and expertise in AI and software development.
-- A curated list of featured projects with descriptions, technologies used, and links.
-- A summary of work experience.
-- Contact information.
+| | URL |
+|---|---|
+| Production frontend | `https://nostalkers.shop` (Vercel, deploys from `main`) |
+| Dev preview frontend | `https://profile-website-git-dev-sahils-projects-22d5c9eb.vercel.app` (Vercel, deploys from `dev`) |
+| Production API | `https://profile-api.diwan-sahilsingh.workers.dev` |
+| Dev API | `https://profile-api-dev.diwan-sahilsingh.workers.dev` |
 
-## Tech Stack
+## Stack
 
-- **Framework**: React
-- **Language**: TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
-- **UI Components**: shadcn/ui, lucide-react
-- **Routing**: React Router DOM
-- **Data Fetching**: TanStack React Query
+- **Frontend**: Vite 7 + React 19 + TypeScript 5.8 + Tailwind v4, BrowserRouter (`/`, `/projects`, `/projects/:slug`), shadcn-style primitives, Framer Motion, Embla, react-markdown, lucide-react.
+- **Worker** (`api/`): Cloudflare Worker with KV (cache + rate limit), Turnstile bot protection, real-time RAG over a bundled embeddings corpus, GPT-5-nano streaming completions.
+- **Tooling**: Docker-first dev, Vitest + Playwright for tests, Wrangler for the Worker.
 
-## Getting Started
+## Local development
 
-### Prerequisites
+All build tools run inside containers — nothing is installed on the host.
 
-- Node.js (v18 or higher recommended)
-- npm or yarn
-
-### Installation and Running
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/your-username/your-repo-name.git
-   cd your-repo-name
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Run the development server:**
-   ```bash
-   npm run dev
-   ```
-   The application will be available at `http://localhost:5173`.
-
-### Building for Production
-
-To create a production build, run:
 ```bash
-npm run build
+# .env at repo root must contain:
+#   OPENAI_API_KEY, TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY,
+#   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, VERCEL_TOKEN
+
+docker compose up web    # http://localhost:5173
 ```
-The optimized files will be in the `dist/` directory.
 
-### Linting
+The api container will fail to start on hosts without 48-bit virtual address space (e.g. Raspberry Pi 32-bit kernels) because `workerd` OOMs. To work around, point the local frontend at the deployed dev worker:
 
-To run the linter, use:
 ```bash
-npm run lint
+VITE_API_BASE_URL=https://profile-api-dev.diwan-sahilsingh.workers.dev \
+  docker compose up web
 ```
+
+See `DEV.md` for the full Docker workflow.
+
+## Deploy
+
+- **Frontend**: push to `dev` for a preview, merge to `main` for production. Vercel handles the rest.
+- **Worker**: from inside the api container so wrangler runs in a supported environment:
+  ```bash
+  docker compose run --rm --no-deps \
+    -e CLOUDFLARE_API_TOKEN -e CLOUDFLARE_ACCOUNT_ID \
+    api npx wrangler deploy --env dev   # or omit --env for prod
+  ```
+
+## Documentation
+
+- `docs/website-overview.md` — current architecture, content, conventions, operational notes.
+- `docs/Portfolio v2 implementation plan.md` — the original TDD plan that drove the v2 rebuild (kept for historical reference).
+- `docs/content-management-plan.md` — proposal for moving content out of code so non-developers can edit projects/skills/etc.
+- `docs/conversations-history.md` — running execution log of the v2 build sessions.

@@ -1,5 +1,7 @@
 # Portfolio v2 — Implementation Plan (TDD, Subagent-Ready)
 
+> **Status: complete (May 2026).** This plan is preserved as a historical reference — the v2 build it describes is now deployed to production. For current architecture, content, and conventions read `docs/website-overview.md`. Open items still tracked: `public/og-default.png` (1200×630) for OG previews, and a Lighthouse run from a non-Pi host.
+
 This plan turns the agreed feature list into discrete, test-first tasks that a Claude Code orchestrator can dispatch to **Haiku subagents**. Every task is scoped to be completable by Haiku given the spec + tests in this doc. The orchestrator (Sonnet/Opus) handles architecture, integration, and review.
 
 ---
