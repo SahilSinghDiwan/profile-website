@@ -44,8 +44,23 @@ export function ResumeChat({ getTurnstileToken: externalGetToken }: ResumeChatPr
   tokenRef.current = turnstileToken;
 
   const getToken = externalGetToken ?? (() => tokenRef.current);
+
+  const resetTurnstile = () => {
+    if (externalGetToken) return;
+    setTurnstileToken("");
+    tokenRef.current = "";
+    if (turnstileWidgetIdRef.current && window.turnstile) {
+      try {
+        window.turnstile.reset(turnstileWidgetIdRef.current);
+      } catch {
+        // widget may be in a transient state; ignore
+      }
+    }
+  };
+
   const { message, error, isLoading, retryAfter, sendMessage, reset } = useChat({
     getTurnstileToken: getToken,
+    onSettled: resetTurnstile,
   });
 
   // Load Turnstile script + render widget when the chat panel opens

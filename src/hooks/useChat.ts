@@ -1,8 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { chat, RateLimitError, ApiError } from "../lib/api";
 
 interface UseChatOptions {
   getTurnstileToken?: () => string;
+  onSettled?: () => void;
 }
 
 export interface UseChatReturn {
@@ -14,11 +15,12 @@ export interface UseChatReturn {
   reset: () => void;
 }
 
-export function useChat({ getTurnstileToken = () => "" }: UseChatOptions = {}): UseChatReturn {
+export function useChat({ getTurnstileToken = () => "", onSettled }: UseChatOptions = {}): UseChatReturn {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [retryAfter, setRetryAfter] = useState(0);
+  const sendingRef = useRef(false);
 
   const reset = useCallback(() => {
     setMessage("");
@@ -28,6 +30,8 @@ export function useChat({ getTurnstileToken = () => "" }: UseChatOptions = {}): 
 
   const sendMessage = useCallback(
     async (question: string) => {
+      if (sendingRef.current) return;
+      sendingRef.current = true;
       setIsLoading(true);
       setError("");
       setMessage("");
@@ -54,10 +58,12 @@ export function useChat({ getTurnstileToken = () => "" }: UseChatOptions = {}): 
           setError("An unexpected error occurred");
         }
       } finally {
+        sendingRef.current = false;
         setIsLoading(false);
+        onSettled?.();
       }
     },
-    [getTurnstileToken]
+    [getTurnstileToken, onSettled]
   );
 
   return {
