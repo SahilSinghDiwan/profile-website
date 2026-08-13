@@ -1,4 +1,6 @@
 import { useParams, Link } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
+import type { Components } from "react-markdown";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Seo } from "../lib/meta";
@@ -6,6 +8,24 @@ import { findPostBySlug } from "../data/writing";
 import NotFound from "./NotFound";
 
 const SITE_URL = "https://sahildiwan.in";
+
+// Markdown styling for the long-form "director's cut". Links always open in a new tab.
+const markdownComponents: Components = {
+  h2: (p) => <h2 className="text-xl font-semibold mt-8 mb-3" {...p} />,
+  h3: (p) => <h3 className="text-lg font-semibold mt-6 mb-2" {...p} />,
+  p: (p) => <p className="leading-relaxed" {...p} />,
+  a: (p) => (
+    <a className="text-primary hover:underline" target="_blank" rel="noopener noreferrer" {...p} />
+  ),
+  ul: (p) => <ul className="list-disc pl-6 space-y-1" {...p} />,
+  ol: (p) => <ol className="list-decimal pl-6 space-y-1" {...p} />,
+  strong: (p) => <strong className="font-semibold" {...p} />,
+  em: (p) => <em className="italic" {...p} />,
+  code: (p) => <code className="rounded bg-muted px-1 py-0.5 text-sm" {...p} />,
+  blockquote: (p) => (
+    <blockquote className="border-l-2 border-border pl-4 italic text-muted-foreground" {...p} />
+  ),
+};
 
 const WritingDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -54,6 +74,7 @@ const WritingDetail = () => {
             />
           )}
 
+          {/* The short version — what went to LinkedIn */}
           <article className="space-y-4 text-base leading-relaxed">
             {paragraphs.map((para, i) => (
               <p key={i} className="whitespace-pre-line">
@@ -70,6 +91,44 @@ const WritingDetail = () => {
                 </Badge>
               ))}
             </div>
+          )}
+
+          {/* The long-form "director's cut" — website only */}
+          {post.longform && (
+            <section className="mt-12 pt-8 border-t border-border">
+              <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-6">
+                The full write-up
+              </h2>
+              <div className="space-y-4 text-base leading-relaxed">
+                <ReactMarkdown components={markdownComponents}>{post.longform}</ReactMarkdown>
+              </div>
+            </section>
+          )}
+
+          {post.references && post.references.length > 0 && (
+            <section className="mt-10 pt-6 border-t border-border">
+              <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-4">
+                References &amp; further reading
+              </h2>
+              <ol className="space-y-3 text-sm">
+                {post.references.map((r, i) => (
+                  <li key={r.url} className="flex gap-2">
+                    <span className="text-muted-foreground tabular-nums">{i + 1}.</span>
+                    <span>
+                      <a
+                        href={r.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-primary hover:underline"
+                      >
+                        {r.title}
+                      </a>
+                      {r.note && <span className="text-muted-foreground"> — {r.note}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </section>
           )}
 
           {post.linkedinUrl && (

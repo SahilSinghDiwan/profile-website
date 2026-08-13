@@ -12,5 +12,23 @@
     "#DataQuality"
   ],
   "cardImage": "/writing/2026-08-13-llmops-610329.png",
-  "linkedinUrl": ""
+  "linkedinUrl": "https://www.linkedin.com/feed/update/urn:li:share:7493644994029707264",
+  "longform": "## The assumption I didn't know I was making\n\nThe incident-resolution assistant started as a ~20-user POC. In the notebook it looked sharp: pull the structured fields off each incident, ground the model, surface the nearest past incident and its resolution steps. Every incident I tested followed the ServiceNow format, so parsing the structure was free. The load-bearing assumption I never wrote down: that the structure would hold.\n\n## What broke at scale\n\nThen it met 200+ SREs and years of real ServiceNow history. People hadn't filled the format consistently — fields skipped, freeform where I expected tags, structure where the template didn't ask for any.\n\nThe retrieval layer had its own version of the problem. Similar-incident search ran on embeddings, and on this data everything looked alike — same product vocabulary, same log-line cadence — so \"nearest\" stopped meaning \"similar.\" That's not just my bad luck: **Steck, Ekanadham & Kallus** (Netflix, WWW 2024) show cosine similarity between embeddings can be *arbitrary and therefore meaningless*, because the regularization used to train a model silently shapes the geometry you're measuring [1]. On a homogeneous corpus that effect is amplified — everything is close to everything.\n\n## The fix wasn't a better parser\n\nTwo things moved the numbers. I masked the identifiers dominating the vectors — region, timestamp, host — so the model stopped keying on boilerplate. Then I stopped asking embeddings to do the whole job: hybrid retrieval, BM25 for the exact tokens and vectors for the semantics, combined. A standard, calibration-free way to fuse two ranked lists like that is **Reciprocal Rank Fusion** (Cormack, Clarke & Büttcher, SIGIR 2009) [2]. Similar-incident recall went from ~30% to 80%+.\n\nFor the structure problem, I didn't try to reform an org's incident habits. I found the ~6-month windows where teams had been consistent, anchored there, and designed the pipeline to tolerate the drift instead of pretending it away.\n\n## The lesson, already written down\n\nA notebook proves the idea works on the data you picked. Production is other people's formatting — it tells you which of your assumptions were load-bearing. This gap has a name: **Sculley et al.'s** *Hidden Technical Debt in Machine Learning Systems* (NIPS 2015) catalogs exactly these failure modes — data dependencies, *changes in the external world*, boundary erosion — as the ongoing cost a slick POC hides [3].\n\nNone of the fixes were clever. The work was finding the pockets of order already in the mess and building on those.",
+  "references": [
+    {
+      "title": "Steck, Ekanadham & Kallus — Is Cosine-Similarity of Embeddings Really About Similarity? (WWW 2024)",
+      "url": "https://arxiv.org/abs/2403.05440",
+      "note": "Cosine similarity of embeddings can be arbitrary; training-time regularization silently shapes the geometry you measure."
+    },
+    {
+      "title": "Cormack, Clarke & Büttcher — Reciprocal Rank Fusion outperforms Condorcet and individual Rank Learning Methods (SIGIR 2009)",
+      "url": "https://doi.org/10.1145/1571941.1572114",
+      "note": "A simple, calibration-free way to fuse BM25 + dense ranked lists — the standard hybrid-retrieval fusion."
+    },
+    {
+      "title": "Sculley et al. — Hidden Technical Debt in Machine Learning Systems (NIPS 2015)",
+      "url": "https://papers.nips.cc/paper/5656-hidden-technical-debt-in-machine-learning-systems",
+      "note": "Catalogs production ML failure modes: data dependencies, changes in the external world, boundary erosion."
+    }
+  ]
 }
