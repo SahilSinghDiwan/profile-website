@@ -1,0 +1,16 @@
+{
+  "slug": "2026-08-13-llmops-610329",
+  "title": "The demo worked because every incident followed the template.",
+  "date": "2026-08-13",
+  "pillar": "llmops",
+  "format": "war-story",
+  "body": "The demo worked because every incident followed the template. Real SRE traffic didn't.\n\nThe POC was clean: ~20 users, incidents that mostly matched the structured format. My retrieval and resolution-step generation leaned on that structure — pull the right fields, ground the LLM, surface the similar incident.\n\nThen it met 200+ SREs and years of real ServiceNow history. Teams hadn't filled the incident format consistently — fields skipped, freeform where I expected structure, structure where there wasn't any. The assumptions that made the notebook version look smart were the exact thing buckling at scale.\n\nThe fix wasn't a better parser. I went back through the actual data, found ~6-month windows where teams had genuinely been consistent, anchored on those, and designed the pipeline to tolerate the drift instead of pretending it away.\n\nA notebook proves the idea works on the data you picked. Real traffic tells you which of your assumptions were load-bearing.",
+  "hashtags": [
+    "#LLMOps",
+    "#IncidentManagement",
+    "#AIEngineering",
+    "#DataQuality"
+  ],
+  "cardImage": "/writing/2026-08-13-llmops-610329.png",
+  "linkedinUrl": ""
+}
