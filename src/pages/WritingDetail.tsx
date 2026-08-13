@@ -108,12 +108,14 @@ const WritingDetail = () => {
           {post.references && post.references.length > 0 && (
             <section className="mt-10 pt-6 border-t border-border">
               <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-4">
-                References &amp; further reading
+                Further reading
               </h2>
-              <ol className="space-y-3 text-sm">
-                {post.references.map((r, i) => (
+              <ul className="space-y-3 text-sm">
+                {post.references.map((r) => (
                   <li key={r.url} className="flex gap-2">
-                    <span className="text-muted-foreground tabular-nums">{i + 1}.</span>
+                    <span className="mt-1 text-muted-foreground" aria-hidden>
+                      ↗
+                    </span>
                     <span>
                       <a
                         href={r.url}
@@ -127,7 +129,7 @@ const WritingDetail = () => {
                     </span>
                   </li>
                 ))}
-              </ol>
+              </ul>
             </section>
           )}
 
