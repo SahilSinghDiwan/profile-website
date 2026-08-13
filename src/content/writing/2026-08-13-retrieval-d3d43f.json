@@ -1,0 +1,16 @@
+{
+  "slug": "2026-08-13-retrieval-d3d43f",
+  "title": "Cosine similarity was quietly sabotaging our incident search.",
+  "date": "2026-08-13",
+  "pillar": "retrieval",
+  "format": "war-story",
+  "body": "Cosine similarity was quietly sabotaging our incident search.\n\nEvery incident in the store looked alike to the embedder — same product vocabulary, same log-line cadence — so \"nearest\" meant \"vaguely on-topic,\" not \"actually similar.\" Similar-incident recall sat around 30%.\n\nTwo changes fixed it. I masked the identifiers that were dominating the vectors — region, timestamp, host — so the model stopped keying on boilerplate. Then I put hybrid retrieval in front: BM25 for the exact tokens, vectors for the semantics, fused.\n\nRecall went from ~30% to 80%+ on similar-incident lookup.\n\nThe lesson I keep relearning: when your data is homogeneous, pure vector search can't discriminate. You have to strip what's shared before you can find what's actually alike.",
+  "hashtags": [
+    "#RAG",
+    "#HybridSearch",
+    "#VectorSearch",
+    "#MLOps"
+  ],
+  "cardImage": "/writing/2026-08-13-retrieval-d3d43f.png",
+  "linkedinUrl": ""
+}
