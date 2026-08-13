@@ -1,5 +1,17 @@
 import type { LucideIcon } from "lucide-react";
 
+export interface WritingPost {
+  slug: string;
+  title: string;
+  date: string; // ISO YYYY-MM-DD
+  pillar: string;
+  format: string;
+  body: string; // clean post text (no hashtags inline)
+  hashtags: string[];
+  cardImage?: string; // e.g. /writing/<slug>.png
+  linkedinUrl?: string; // filled once the LinkedIn post exists
+}
+
 export interface Project {
   title: string;
   description: string;

@@ -1,0 +1,2 @@
+# Posts are dropped here as <slug>.json by the posting-engine (web_publish.py).
+# This file keeps the directory present when the feed is empty.
