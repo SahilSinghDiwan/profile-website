@@ -1,0 +1,6 @@
+# The api/ directory is the Cloudflare Worker — it is deployed with `wrangler`, NOT Vercel.
+# Vercel otherwise treats a top-level api/ as Serverless Functions and compiles every .ts in
+# it (including the Worker's test files, which reference `cloudflare:test`), which fails the
+# deploy on any cache-less build. The frontend calls the Worker cross-origin via
+# VITE_API_BASE_URL, so it needs nothing from api/ at build time.
+/api

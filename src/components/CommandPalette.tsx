@@ -42,6 +42,16 @@ export function CommandPalette() {
       },
     },
     {
+      id: "writing",
+      title: "Go to Writing",
+      icon: <Navigation className="w-4 h-4" />,
+      keywords: ["writing", "posts", "blog", "notes", "linkedin"],
+      action: () => {
+        navigate("/writing");
+        setOpen(false);
+      },
+    },
+    {
       id: "about",
       title: "Scroll to About",
       icon: <Navigation className="w-4 h-4" />,
