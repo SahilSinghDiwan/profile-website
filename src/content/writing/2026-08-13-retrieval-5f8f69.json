@@ -1,0 +1,44 @@
+{
+  "slug": "2026-08-13-retrieval-5f8f69",
+  "title": "The fix for hallucination wasn't a better model.",
+  "date": "2026-08-13",
+  "pillar": "retrieval",
+  "format": "contrarian",
+  "body": "The fix for hallucination wasn't a better model. It was deciding what the model never gets to see.\n\nconvogene.ai answers detailed questions about a semiconductor company's processor lineup — core counts, specs, which chip does what. Early versions hallucinated often. The instinct is to reach for a stronger model. That wasn't the problem.\n\nTwo layers fixed it.\n\nFirst, the data. The client's corpus is huge and a lot of it is embargoed or restricted. Scheduled scraping (LangGraph + LangChain) filters that out before anything gets embedded, so the model can't ground on material it shouldn't touch.\n\nSecond, prompt guardrails that keep it answering from what was retrieved and refuse when the answer isn't there.\n\nThe hard part was never answering. It was excluding the restricted material and still answering fully from what's allowed.\n\nHallucinations went from frequent to near-zero. No formal eval — but it's live, and it holds on processor specs.\n\nSame model throughout. The accuracy came from the layering.",
+  "hashtags": [
+    "#RAG",
+    "#Guardrails",
+    "#LLMOps",
+    "#AIEngineering"
+  ],
+  "cardImage": "/writing/2026-08-13-retrieval-5f8f69.png",
+  "linkedinUrl": "",
+  "longform": "## The Real Problem Wasn't the Model\n\nWhen you ask an LLM a detailed question—especially one grounded in technical specification—and it sounds confident while being completely wrong, your instinct is to try a stronger model. Convogene.ai started there. The system answers detailed questions about semiconductor processors: which chip solves your problem, exact core counts, memory hierarchies, die sizes. Early versions hallucinated constantly. So we tried a bigger model. Still hallucinating.\n\nThe problem wasn't the model's capability. It was the architecture.\n\nLarge language models generate text by predicting what comes next, token by token. They don't fact-check themselves; they extrapolate from patterns in their training data [1]. When the training data contains conflicting information, or when a topic sits right at the edge of the model's knowledge, it fills gaps with plausible-sounding text that *feels* coherent but isn't grounded in anything verifiable. That's hallucination. No stronger model fixes it—they just hallucinate with more confidence [2].\n\nThe real lever is what the model never gets to see.\n\n## Filtering the Corpus\n\nOur client had a vast corpus: product documentation, engineering specifications, release notes, design reports. Much of it was embargoed or restricted—internal roadmaps, confidential testing results, material under legal holds. If we embedded all of it and the model grounded on the restricted material, we violated the guardrails that matter.\n\nSo we built a pipeline. Scheduled scraping via LangGraph and LangChain ran on a fixed cadence, pulling from the live documentation sources. Before embedding anything, the pipeline filtered—removing pages marked restricted, embargo lists, confidential tags—anything the model shouldn't cite. Only the *allowed* material made it into the vector store.\n\nThis sounds simple. It's not. The hard part was doing it without losing coverage. You can't just exclude \"the sensitive stuff\" and hope you still answer the questions your users ask. We had to be precise about what gets filtered and why, maintain the exact boundary between *allowed* and *not*, and verify that exclusion didn't leave gaps in the common queries. It took iteration, but it worked.\n\n## Two Layers of Guardrails\n\nEven with a curated corpus, a model can still reach for answers outside what's retrieved. So we added a second layer: prompt guardrails.\n\nThe model receives explicit instructions to answer *only* from what was retrieved. If no retrieved passage contains the answer, it refuses—doesn't guess, doesn't approximate, doesn't fill in from its weights. If the retrieval returns partial information, the model acknowledges the limitation rather than extrapolating [3]. This is straightforward to specify and can be enforced at inference time, independent of the underlying model.\n\nNeMo Guardrails and similar frameworks make this pattern programmable. You define rules—\"don't answer outside your retrieved context\"—and they run as a constraint at generation time [4].\n\n## What Changed\n\nHallucinations dropped from frequent to near-zero. No formal eval, but it's live and it holds on processor specs. Same model throughout. The accuracy came from layering: curated data, then guardrails, then generation.\n\nThe lesson is architecture-dependent. The strongest model matters less than the filtering and rails around it. Retrieval-augmented generation is effective because it grounds generation in specific evidence, but only if the retrieval index contains the right material and the generation respects that boundary [1]. Skip either step and you're back to hallucination.",
+  "references": [
+    {
+      "title": "Lewis, Perez, Piktus, et al. — Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (NeurIPS 2020)",
+      "url": "https://arxiv.org/abs/2005.11401",
+      "note": "Foundational RAG work combining parametric and non-parametric memory; shows retrieval-grounded generation improves factuality and reduces hallucination in knowledge-intensive tasks."
+    },
+    {
+      "title": "Long et al. — A Survey on Hallucination in Large Language Models: Principles, Taxonomy, Challenges, and Open Questions (ACM TOIS 2024)",
+      "url": "https://arxiv.org/abs/2311.05232",
+      "note": "Comprehensive survey of hallucination causes and mitigation methods in LLMs; establishes that retrieval-augmented systems are primary mitigation approach but challenges remain in retrieval quality and context construction."
+    },
+    {
+      "title": "Rebedea, Dinu, Sreedhar, et al. — NeMo Guardrails: A Toolkit for Controllable and Safe LLM Applications with Programmable Rails (EMNLP 2023)",
+      "url": "https://aclanthology.org/2023.emnlp-demo.40/",
+      "note": "Framework for runtime-based output constraint; demonstrates how guardrails can enforce model behavior without retraining, enabling control over what a model generates relative to its retrieved context."
+    },
+    {
+      "title": "Ding, Pang, Wei, et al. — Rowen: Adaptive Retrieval-Augmented Generation for Hallucination Mitigation in LLMs (SIGIR-AP 2025)",
+      "url": "https://arxiv.org/abs/2402.10612",
+      "note": "Shows that hallucination in RAG systems persists when retrieval quality or confidence is low; proposes adaptive retrieval triggering based on model uncertainty to improve mitigation."
+    },
+    {
+      "title": "Ferraretto, Raffel, Shleifer — Recycling the Web: A Method to Enhance Pre-training Data Quality and Quantity for Language Models (COLM 2025)",
+      "url": "https://arxiv.org/abs/2506.04689",
+      "note": "Demonstrates that data filtering in pretraining removes up to 99% of raw content; illustrates the importance of data curation pipelines in determining what material a model learns from."
+    }
+  ]
+}
