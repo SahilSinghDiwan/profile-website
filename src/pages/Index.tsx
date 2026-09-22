@@ -3,6 +3,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Github, Mail, Linkedin, Moon, Sun, Menu, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { projects } from '../data/projects';
 import { skills } from '../data/skills';
 import { experience } from '../data/experience';
@@ -55,7 +56,7 @@ const Index = () => {
     <>
       <Seo
         title="Sahil Singh Diwan — AI / GenAI Engineer"
-        description="5+ years building RAG pipelines, scalable microservices, and production-grade GenAI systems."
+        description="Applied AI/GenAI Engineer. I take LLM & RAG systems from POC to production at scale — 20 → 200+ users, ~70% faster SRE triage, retrieval recall 30% → 80%."
       />
     <div className={`min-h-screen bg-background text-foreground transition-colors duration-300`}>
         {/* Navigation */}
@@ -72,6 +73,8 @@ const Index = () => {
                 <button onClick={() => scrollToSection('experience')} className="hover:text-primary transition-colors">Experience</button>
                 <button onClick={() => scrollToSection('education')} className="hover:text-primary transition-colors">Education</button>
                 <button onClick={() => scrollToSection('contact')} className="hover:text-primary transition-colors">Contact</button>
+                <Link to="/projects" className="hover:text-primary transition-colors">All Projects</Link>
+                <Link to="/writing" className="hover:text-primary transition-colors">Writing</Link>
                 <ResumeDownload />
                 <Button variant="ghost" size="sm" onClick={toggleTheme}>
                   {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -99,6 +102,9 @@ const Index = () => {
                   <button onClick={() => scrollToSection('experience')} className="text-left py-2 hover:text-primary transition-colors">Experience</button>
                   <button onClick={() => scrollToSection('education')} className="text-left py-2 hover:text-primary transition-colors">Education</button>
                   <button onClick={() => scrollToSection('contact')} className="text-left py-2 hover:text-primary transition-colors">Contact</button>
+                  <Link to="/projects" onClick={() => setIsMobileMenuOpen(false)} className="text-left py-2 hover:text-primary transition-colors">All Projects</Link>
+                  <Link to="/writing" onClick={() => setIsMobileMenuOpen(false)} className="text-left py-2 hover:text-primary transition-colors">Writing</Link>
+                  <div className="pt-2"><ResumeDownload /></div>
                 </div>
               </div>
             )}
@@ -116,11 +122,11 @@ const Index = () => {
               </h1>
 
               <p className="text-xl sm:text-2xl text-primary font-medium tracking-tight mb-8">
-                Architecting end-to-end AI solutions
+                I take LLM &amp; RAG systems from POC to production at scale
               </p>
 
               <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-10">
-                5+ years building RAG pipelines, scalable microservices, and production-grade GenAI systems with vector databases, Kafka, Airflow, and Kubernetes.
+                5 years building applied AI: scaled a GenAI incident-assist platform from a 20-user POC to a 200+ SRE beta, cut time-to-find similar incidents ~70%, and shipped a near-zero-hallucination RAG assistant on Azure. Production GenAI on Kafka, Kubernetes and Airflow — not notebooks.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -145,36 +151,36 @@ const Index = () => {
 
             <div className="max-w-3xl mx-auto">
               <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-6">
-                Dynamic AI / GenAI Engineer with 5 years of software development and AI experience, specializing in architecting and deploying end-to-end AI solutions. I've scaled GenAI products from POC to production, built advanced RAG pipelines, and deployed containerized microservices for high-availability, low-latency enterprise applications.
+                Applied AI / GenAI Engineer, 5 years. I take LLM and RAG systems the whole way — from a POC someone demos once to a system real users depend on daily. Non-linear path there: Mechanical B.E. → self-taught → C-DAC → five years shipping production GenAI. It means I think about the system, not just the model.
               </p>
               <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-10">
-                I work fluently with vector databases (FAISS, Milvus, ChromaDB), distributed messaging (Kafka), and orchestration tools (Kubernetes, Airflow). My focus: clean, maintainable code that translates technical solutions into measurable business value — reduced MTTR, better recall, fewer hallucinations.
+                I work fluently with vector databases (FAISS, Milvus, ChromaDB), distributed messaging (Kafka), and orchestration (Kubernetes, Airflow, Helm). The throughline: retrieval that actually retrieves, grounding that actually grounds, and pipelines that survive contact with production traffic. This site is part of the proof — it runs its own AI resume assistant and AI-written project summaries.
               </p>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 text-center">
                 <div className="p-4">
-                  <div className="text-3xl font-bold tracking-tight text-primary mb-2 tabular-nums">5+</div>
-                  <div className="text-muted-foreground">Years Experience</div>
+                  <div className="text-3xl font-bold tracking-tight text-primary mb-2 tabular-nums">~70%</div>
+                  <div className="text-muted-foreground">Faster incident triage (15–20 min → ~5 min)</div>
                 </div>
                 <div className="p-4">
-                  <div className="text-3xl font-bold tracking-tight text-primary mb-2 tabular-nums">10+</div>
-                  <div className="text-muted-foreground">Corporate Projects</div>
+                  <div className="text-3xl font-bold tracking-tight text-primary mb-2 tabular-nums">30 → 80%</div>
+                  <div className="text-muted-foreground">Similar-incident retrieval recall</div>
                 </div>
                 <div className="p-4">
-                  <div className="text-3xl font-bold tracking-tight text-primary mb-2 tabular-nums">99.9%</div>
-                  <div className="text-muted-foreground">Uptime Achieved</div>
+                  <div className="text-3xl font-bold tracking-tight text-primary mb-2 tabular-nums">20 → 200+</div>
+                  <div className="text-muted-foreground">Users, POC to production beta</div>
                 </div>
                 <div className="p-4">
-                  <div className="text-3xl font-bold tracking-tight text-primary mb-2 tabular-nums">40–60%</div>
-                  <div className="text-muted-foreground">MTTR Reduction</div>
+                  <div className="text-3xl font-bold tracking-tight text-primary mb-2 tabular-nums">5</div>
+                  <div className="text-muted-foreground">Years shipping applied AI</div>
                 </div>
                 <div className="p-4">
-                  <div className="text-3xl font-bold tracking-tight text-primary mb-2 tabular-nums">200+</div>
-                  <div className="text-muted-foreground">SREs Supported</div>
+                  <div className="text-3xl font-bold tracking-tight text-primary mb-2 tabular-nums">1</div>
+                  <div className="text-muted-foreground">Live public RAG product (convogene.ai)</div>
                 </div>
                 <div className="p-4">
-                  <div className="text-3xl font-bold tracking-tight text-primary mb-2 tabular-nums">90%</div>
-                  <div className="text-muted-foreground">RCA Accuracy</div>
+                  <div className="text-3xl font-bold tracking-tight text-primary mb-2 tabular-nums">16 mo</div>
+                  <div className="text-muted-foreground">Built, shipped, handed to the client&rsquo;s own team</div>
                 </div>
               </div>
             </div>

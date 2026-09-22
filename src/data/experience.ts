@@ -7,11 +7,11 @@ export const experience: ExperienceJob[] = [
     location: "Bengaluru, India",
     period: "March 2024 - Present",
     bullets: [
-      "Architected a Python-based microservices Incident Resolution Assistant; scaled from a 20-user POC to 200+ SREs in production, processing live incident streams.",
-      "Engineered a Kafka + Elasticsearch event-driven pipeline; 90% accuracy in automated root cause identification, 40–60% MTTR reduction.",
-      "Designed a hybrid retrieval system boosting similar-incident recall from 30% to 80%+; deployed full-stack on Kubernetes with custom Helm charts.",
+      "Built the retrieval engine and Python microservices behind an AI incident-resolution assistant; scaled it from a 20-user POC to a 200+ SRE beta and cut time-to-find similar incidents ~70% (15–20 min → ~5 min).",
+      "Engineered a Kafka + Elasticsearch event-driven pipeline (ServiceNow ingestion → summarization, resolution-step generation, related-incident surfacing), with confidentiality-preserving masking of region/time/identifiers so matching ran on incident semantics.",
+      "Rebuilt failing cosine search as hybrid retrieval (semantic + structured filtering + identifier masking) on near-duplicate incident data, roughly doubling recall (~30% → ~80%); deployed full-stack on Kubernetes with custom Helm charts.",
       "Built a cloud-native anomaly detection system on Airflow + Kubernetes for data-center-scale datasets.",
-      "Architected a customized RAG chatbot with live internet access; 50% better response quality, near-zero hallucination, deployed on Microsoft Azure.",
+      "Built and shipped convogene.ai, a live public RAG chatbot; two-layer guardrails (scraped-data filtering + prompt) drove hallucinations from frequent to near-zero. Deployed on Microsoft Azure.",
       "Owned end-to-end multimodal AI generative solution; fine-tuned an instruct-pix2pix model and managed the final application rollout.",
     ],
     tech: [

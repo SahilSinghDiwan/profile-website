@@ -5,9 +5,9 @@ export const projects: Project[] = [
     slug: "incident-resolution-assistant",
     title: "Incident Resolution Assistant",
     description:
-      "Architected a Python-based microservices platform integrating with ITSM systems to assist SREs. Scaled from a 20-user POC to a production tool supporting 200+ SREs, processing live incident streams.",
+      "Architected a Python-based microservices platform integrating with ITSM systems to assist SREs. Scaled from a 20-user POC to a 200+ SRE beta, processing live incident streams. Cut time-to-find a similar prior incident from 15–20 min to ~5 min (~70%).",
     technologies: ["Python", "Microservices", "Kubernetes", "Helm"],
-    impact: "Scaled POC → production for 200+ SREs",
+    impact: "20-user POC → 200+ SRE beta · triage ~70% faster",
     category: "GenAI / Microservices",
     pinned: true,
   },
@@ -17,7 +17,7 @@ export const projects: Project[] = [
     description:
       "Engineered an event-driven pipeline for real-time log fetching, achieving high-accuracy automated root cause identification across live incident streams.",
     technologies: ["Apache Kafka", "Elasticsearch", "Python"],
-    impact: "90% RCA accuracy, 40–60% MTTR reduction",
+    impact: "Automated root-cause surfacing on live incident streams",
     category: "Performance Optimization",
     pinned: true,
   },
@@ -27,7 +27,7 @@ export const projects: Project[] = [
     description:
       "Designed a hybrid retrieval system to overcome data ambiguity, orchestrating full-stack deployment on Kubernetes using custom Helm charts.",
     technologies: ["FAISS", "Elasticsearch", "Kubernetes", "Helm"],
-    impact: "Similar-incident recall: 30% → 80%+",
+    impact: "Retrieval recall roughly doubled: ~30% → ~80%",
     category: "Advanced Retrieval",
   },
   {
@@ -41,12 +41,13 @@ export const projects: Project[] = [
   },
   {
     slug: "rag-chatbot-with-live-internet-access",
-    title: "RAG Chatbot with Live Internet Access",
+    title: "Convogene — Live RAG Product",
     description:
-      "Architected a customized RAG chatbot with live internet access for dynamic data enrichment. Validated through rigorous ground-truth manual testing and deployed on Microsoft Azure.",
+      "Built and shipped a live, public RAG chatbot (convogene.ai) that answers detailed questions about a semiconductor client's processor lineup. Scheduled scraping via LangGraph/LangChain plus two-layer guardrails — data filtering to exclude embargoed material, and prompt guardrails — drove hallucinations from frequent to near-zero. Deployed on Microsoft Azure.",
     technologies: ["LangChain", "RAG", "Microsoft Azure", "Python"],
-    impact: "50% better response quality, near-zero hallucination",
+    impact: "Live in production — hallucinations frequent → near-zero",
     category: "RAG Architecture",
+    demoUrl: "https://convogene.ai",
     pinned: true,
   },
   {
