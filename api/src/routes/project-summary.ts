@@ -1,5 +1,6 @@
 import type { Env } from "../index";
 import { createKvCache, CORPUS_VERSION } from "../lib/cache";
+import { llmConfig } from "../lib/llm";
 
 interface ProjectSummaryResponse {
   summary: string;
@@ -72,17 +73,18 @@ export async function handleProjectSummary(request: Request, env: Env, slug: str
 
   // Generate or fetch summary
   let summary: string;
-  if (env.OPENAI_API_KEY) {
-    // Call OpenAI to generate summary
+  if (env.LLM_API_KEY) {
+    // Call the LLM provider to generate summary
     try {
-      const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      const llm = llmConfig(env);
+      const llmRes = await fetch(`${llm.baseUrl}/chat/completions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+          Authorization: `Bearer ${llm.apiKey}`,
         },
         body: JSON.stringify({
-          model: "gpt-4o-mini",
+          model: llm.chatModel,
           messages: [
             {
               role: "system",
@@ -94,14 +96,14 @@ export async function handleProjectSummary(request: Request, env: Env, slug: str
               content: `Project: ${metadata.title}\n\nDescription: ${metadata.description}\n\nTechnologies: ${metadata.technologies.join(", ")}\n\nProvide a 1-paragraph summary suitable for a portfolio.`,
             },
           ],
-          max_tokens: 150,
+          max_tokens: 600,
         }),
       });
 
-      if (!openaiRes.ok) {
+      if (!llmRes.ok) {
         summary = await generateSummary(slug, metadata);
       } else {
-        const data = (await openaiRes.json()) as {
+        const data = (await llmRes.json()) as {
           choices: Array<{ message: { content: string } }>;
         };
         summary = data.choices[0]?.message.content ?? (await generateSummary(slug, metadata));

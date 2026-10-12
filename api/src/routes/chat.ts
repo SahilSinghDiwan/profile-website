@@ -2,12 +2,13 @@ import type { Env } from "../index";
 import { cacheKey, createKvCache, CORPUS_VERSION } from "../lib/cache";
 import { checkRateLimit, clientIp, rateLimitHeaders } from "../lib/ratelimit";
 import { verifyTurnstile } from "../lib/turnstile";
+import { llmConfig, EMBED_DIMENSIONS } from "../lib/llm";
 import bundledCorpus from "../../data/corpus.json";
 
-const CHAT_MODEL = "gpt-5-nano";
-const EMBED_MODEL = "text-embedding-3-small";
 const RL_CFG = { limit: 10, windowSec: 60 };
-const RELEVANCE_THRESHOLD = 0.15;
+// Calibrated for gemini-embedding-001 @768d (2026-10-12): off-topic 0.41-0.48, on-topic 0.51-0.70.
+// Re-measure if the embedding model changes. The system prompt is the second guard.
+const RELEVANCE_THRESHOLD = 0.49;
 
 interface Chunk {
   text: string;
@@ -42,15 +43,26 @@ function cosineSimilarity(a: number[], b: number[]): number {
   return denominator === 0 ? 0 : dotProduct / denominator;
 }
 
-async function embedQuestion(text: string, apiKey: string): Promise<number[] | null> {
-  const res = await fetch("https://api.openai.com/v1/embeddings", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ model: EMBED_MODEL, input: text }),
-  });
-  if (!res.ok) return null;
-  const data = (await res.json()) as { data: Array<{ embedding: number[] }> };
-  return data.data[0]?.embedding ?? null;
+async function embedQuestion(text: string, env: Env): Promise<number[] | null> {
+  const llm = llmConfig(env);
+  // Free-tier providers return transient 429/5xx under bursts; retry once.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const res = await fetch(`${llm.baseUrl}/embeddings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${llm.apiKey}` },
+      body: JSON.stringify({ model: llm.embedModel, input: text, dimensions: EMBED_DIMENSIONS }),
+    });
+    if (res.ok) {
+      const data = (await res.json()) as { data: Array<{ embedding: number[] }> };
+      return data.data[0]?.embedding ?? null;
+    }
+    if (attempt === 0 && (res.status === 429 || res.status >= 500)) {
+      await new Promise((r) => setTimeout(r, 400));
+      continue;
+    }
+    return null;
+  }
+  return null;
 }
 
 export async function handleChat(request: Request, env: Env): Promise<Response> {
@@ -134,10 +146,10 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
   }
 
   // Embed the question with the same model used to build the corpus
-  if (!env.OPENAI_API_KEY) {
+  if (!env.LLM_API_KEY) {
     return new Response(JSON.stringify({ error: "embedding_unavailable" }), { status: 500 });
   }
-  const questionEmbedding = await embedQuestion(question, env.OPENAI_API_KEY);
+  const questionEmbedding = await embedQuestion(question, env);
   if (!questionEmbedding) {
     return new Response(JSON.stringify({ error: "embedding_failed" }), { status: 502 });
   }
@@ -161,8 +173,8 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
     return new Response(response, { status: 200, headers });
   }
 
-  // Check if OpenAI is available
-  if (!env.OPENAI_API_KEY) {
+  // Check if the LLM provider is configured
+  if (!env.LLM_API_KEY) {
     const response =
       "I'm unable to generate a response right now. The AI backend is not configured. Please check back later.";
     headers.set("Content-Type", "text/event-stream");
@@ -172,7 +184,7 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
     return new Response(response, { status: 200, headers });
   }
 
-  // Stream completion from CHAT_MODEL
+  // Stream completion from the configured chat model
   headers.set("Content-Type", "text/event-stream");
   headers.set("Cache-Control", "no-cache");
   headers.set("Connection", "keep-alive");
@@ -183,14 +195,15 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
     "You are a Q&A assistant for Sahil Diwan's portfolio. Answer ONLY using the provided context. If unknown, say so. Format replies in concise GitHub-flavored markdown — short paragraphs, bullet lists where helpful.";
 
   try {
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+    const llm = llmConfig(env);
+    const llmRes = await fetch(`${llm.baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${llm.apiKey}`,
       },
       body: JSON.stringify({
-        model: CHAT_MODEL,
+        model: llm.chatModel,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "system", content: `Context:\n${context}` },
@@ -202,11 +215,11 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
       }),
     });
 
-    if (!openaiRes.ok) {
-      return new Response(JSON.stringify({ error: "openai_error" }), { status: 502 });
+    if (!llmRes.ok) {
+      return new Response(JSON.stringify({ error: "llm_error" }), { status: 502 });
     }
 
-    const reader = openaiRes.body?.getReader();
+    const reader = llmRes.body?.getReader();
     if (!reader) {
       return new Response(JSON.stringify({ error: "no_stream" }), { status: 500 });
     }

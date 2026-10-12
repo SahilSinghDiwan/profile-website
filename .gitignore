@@ -40,3 +40,4 @@ api/dist/
 # Project status (not committed, local tracking only)
 STATUS.md
 .npm/
+.dev.vars

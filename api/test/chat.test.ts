@@ -1,5 +1,22 @@
 import { SELF, fetchMock, env } from "cloudflare:test";
 import { describe, it, expect, beforeAll, beforeEach } from "vitest";
+import corpus from "../data/corpus.json";
+
+const LLM_HOST = "https://generativelanguage.googleapis.com";
+const CHAT_PATH = "/v1beta/openai/chat/completions";
+const EMBED_PATH = "/v1beta/openai/embeddings";
+
+// A query vector identical to a corpus chunk scores cosine 1.0 (relevant);
+// a one-hot vector scores near 0 against real embeddings (off-topic).
+const relevantVec = (corpus as { chunks: { embedding: number[] }[] }).chunks[0].embedding;
+const offTopicVec = relevantVec.map((_, i) => (i === 0 ? 1 : 0));
+
+function mockEmbedding(vec: number[]) {
+  fetchMock
+    .get(LLM_HOST)
+    .intercept({ path: EMBED_PATH, method: "POST" })
+    .reply(200, JSON.stringify({ data: [{ embedding: vec }] }));
+}
 
 beforeAll(() => {
   fetchMock.activate();
@@ -31,9 +48,10 @@ describe("POST /api/chat", () => {
   });
 
   it("valid request with dev mode returns 200 with streaming response", async () => {
+    mockEmbedding(relevantVec);
     fetchMock
-      .get("https://api.openai.com")
-      .intercept({ path: "/v1/chat/completions", method: "POST" })
+      .get(LLM_HOST)
+      .intercept({ path: CHAT_PATH, method: "POST" })
       .reply(200, 'data: {"choices":[{"delta":{"content":"Hello"}}]}\ndata: [DONE]');
 
     const res = await SELF.fetch("https://api.test/api/chat?dev=1", {
@@ -47,12 +65,14 @@ describe("POST /api/chat", () => {
 
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toBe("text/event-stream");
+    await res.text(); // drain the stream so isolated storage can settle
   });
 
   it("identical request served from cache on second call", async () => {
+    mockEmbedding(relevantVec);
     fetchMock
-      .get("https://api.openai.com")
-      .intercept({ path: "/v1/chat/completions", method: "POST" })
+      .get(LLM_HOST)
+      .intercept({ path: CHAT_PATH, method: "POST" })
       .reply(200, 'data: {"choices":[{"delta":{"content":"Cached"}}]}\ndata: [DONE]');
 
     // First request
@@ -84,6 +104,7 @@ describe("POST /api/chat", () => {
   });
 
   it("low-relevance question returns scope refusal", async () => {
+    mockEmbedding(offTopicVec);
     const res = await SELF.fetch("https://api.test/api/chat?dev=1", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -99,9 +120,10 @@ describe("POST /api/chat", () => {
   });
 
   it("dev mode bypasses turnstile requirement", async () => {
+    mockEmbedding(relevantVec);
     fetchMock
-      .get("https://api.openai.com")
-      .intercept({ path: "/v1/chat/completions", method: "POST" })
+      .get(LLM_HOST)
+      .intercept({ path: CHAT_PATH, method: "POST" })
       .reply(200, 'data: {"choices":[{"delta":{"content":"Dev"}}]}\ndata: [DONE]');
 
     const res = await SELF.fetch("https://api.test/api/chat?dev=1", {
@@ -115,5 +137,6 @@ describe("POST /api/chat", () => {
 
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toBe("text/event-stream");
+    await res.text(); // drain the stream so isolated storage can settle
   });
 });

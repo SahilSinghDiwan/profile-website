@@ -5,7 +5,10 @@ import { handleProjectSummary } from "./routes/project-summary";
 export interface Env {
   CACHE: KVNamespace;
   RATE_LIMIT: KVNamespace;
-  OPENAI_API_KEY: string;
+  LLM_API_KEY: string;
+  LLM_BASE_URL?: string;
+  LLM_CHAT_MODEL?: string;
+  LLM_EMBED_MODEL?: string;
   TURNSTILE_SECRET_KEY: string;
   PORTFOLIO_ORIGIN: string;
   ENV: string;

@@ -253,7 +253,7 @@ Constants: `EXPERIENCE_BULLET_PREVIEW_COUNT = 2`, `SKILL_PREVIEW_COUNT = 8` (top
 - `[env.dev]` → `profile-api-dev`. Vars: `PORTFOLIO_ORIGIN` is comma-separated allowlist; `ENV=dev`.
 - KV namespaces (dev): `CACHE` `a5b1cffbd20a4099a9868ef9ee053f0a`, `RATE_LIMIT` `d12f22be19c443128be8096623ce5cee`. Production needs its own pair — create with `wrangler kv:namespace create CACHE/RATE_LIMIT` and update the default `[[kv_namespaces]]` block before deploying to prod.
 - Secrets (set per env via `wrangler secret put <NAME> --env dev` from inside the api Docker image):
-  - `OPENAI_API_KEY`
+  - `LLM_API_KEY`
   - `TURNSTILE_SECRET_KEY` — must pair with the sitekey above.
 
 ### Cloudflare Turnstile widget
@@ -281,7 +281,7 @@ docker compose run --rm --no-deps \
 
 # Regenerate the RAG corpus from data/resume.md
 docker compose run --rm \
-  -e OPENAI_API_KEY -v "$(pwd)/data:/repo-data:ro" \
+  -e LLM_API_KEY -v "$(pwd)/data:/repo-data:ro" \
   --no-deps api npx tsx scripts/build-embeddings.ts
 # then bump CORPUS_VERSION in api/src/lib/cache.ts and redeploy.
 

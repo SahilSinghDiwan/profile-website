@@ -21,7 +21,7 @@ preview_id = "REPLACE_WITH_PREVIEW_KV_ID"
 
 # ---- Dev (deployed Worker: profile-api-dev) ----
 # Deploy:       wrangler deploy --env dev
-# Set secrets:  wrangler secret put OPENAI_API_KEY --env dev
+# Set secrets:  wrangler secret put LLM_API_KEY --env dev
 #               wrangler secret put TURNSTILE_SECRET_KEY --env dev
 [env.dev]
 name = "profile-api-dev"

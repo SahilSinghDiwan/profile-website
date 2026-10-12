@@ -2,12 +2,15 @@ import { readFile, writeFile } from "node:fs/promises";
 
 const RESUME_PATH = process.env.RESUME_PATH ?? "/repo-data/resume.md";
 const CORPUS_OUT = process.env.CORPUS_OUT ?? "data/corpus.json";
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const CORPUS_VERSION = process.env.CORPUS_VERSION ?? "v2";
+const LLM_API_KEY = process.env.LLM_API_KEY;
+const LLM_BASE_URL = (process.env.LLM_BASE_URL ?? "https://generativelanguage.googleapis.com/v1beta/openai").replace(/\/+$/, "");
+const EMBED_MODEL = process.env.LLM_EMBED_MODEL ?? "gemini-embedding-001";
+const EMBED_DIMENSIONS = 768; // keep in sync with src/lib/llm.ts
+const CORPUS_VERSION = process.env.CORPUS_VERSION ?? "v4";
 const MAX_CHUNK_CHARS = 1500;
 
-if (!OPENAI_API_KEY) {
-  console.error("OPENAI_API_KEY not set");
+if (!LLM_API_KEY) {
+  console.error("LLM_API_KEY not set");
   process.exit(1);
 }
 
@@ -37,17 +40,17 @@ for (const section of sections) {
 
 console.log(`Embedding ${chunks.length} chunks…`);
 
-const res = await fetch("https://api.openai.com/v1/embeddings", {
+const res = await fetch(`${LLM_BASE_URL}/embeddings`, {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${OPENAI_API_KEY}`,
+    Authorization: `Bearer ${LLM_API_KEY}`,
   },
-  body: JSON.stringify({ model: "text-embedding-3-small", input: chunks }),
+  body: JSON.stringify({ model: EMBED_MODEL, input: chunks, dimensions: EMBED_DIMENSIONS }),
 });
 
 if (!res.ok) {
-  console.error(`OpenAI embeddings failed: ${res.status} ${await res.text()}`);
+  console.error(`Embeddings request failed: ${res.status} ${await res.text()}`);
   process.exit(1);
 }
 
@@ -55,6 +58,8 @@ const data = await res.json() as { data: Array<{ embedding: number[] }> };
 
 const corpus = {
   version: CORPUS_VERSION,
+  model: EMBED_MODEL,
+  dimensions: EMBED_DIMENSIONS,
   chunks: chunks.map((text, i) => ({
     text,
     embedding: data.data[i].embedding,

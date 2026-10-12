@@ -23,7 +23,7 @@ All build tools run inside containers — nothing is installed on the host.
 
 ```bash
 # .env at repo root must contain:
-#   OPENAI_API_KEY, TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY,
+#   LLM_API_KEY, TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY,
 #   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, VERCEL_TOKEN
 
 docker compose up web    # http://localhost:5173
