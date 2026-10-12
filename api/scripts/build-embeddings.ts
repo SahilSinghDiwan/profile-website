@@ -6,7 +6,7 @@ const LLM_API_KEY = process.env.LLM_API_KEY;
 const LLM_BASE_URL = (process.env.LLM_BASE_URL ?? "https://generativelanguage.googleapis.com/v1beta/openai").replace(/\/+$/, "");
 const EMBED_MODEL = process.env.LLM_EMBED_MODEL ?? "gemini-embedding-001";
 const EMBED_DIMENSIONS = 768; // keep in sync with src/lib/llm.ts
-const CORPUS_VERSION = process.env.CORPUS_VERSION ?? "v4";
+const CORPUS_VERSION = process.env.CORPUS_VERSION ?? "v5";
 const MAX_CHUNK_CHARS = 1500;
 
 if (!LLM_API_KEY) {
