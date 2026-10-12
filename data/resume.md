@@ -7,7 +7,7 @@ Bengaluru, India | +91 800-7192-680 | [diwan.sahilsingh@gmail.com](mailto:diwan.
 
 ## Professional Summary
 
-AI/GenAI Engineer with 5 years across software and applied AI engineering, the last two-plus taking **LLM & RAG systems from POC to production at scale**. Scaled a GenAI incident-resolution platform from a 20-user POC to a 200+-SRE beta and cut incident-triage time ~70%; rebuilt failing semantic search as hybrid retrieval to roughly double recall; and shipped a live, near-zero-hallucination RAG product. Production GenAI on Kafka, Kubernetes, and Airflow — not notebooks. Currently building **agentic developer tooling** (LLM-driven test generation and code understanding).
+AI/GenAI Engineer with 5 years across software and applied AI engineering, the last two-plus taking **LLM & RAG systems from POC to production at scale**. Scaled a GenAI incident-resolution platform from a 20-user POC to a 200+-SRE beta and cut incident-triage time ~70%; rebuilt failing semantic search as hybrid retrieval to roughly double recall; and shipped a live, near-zero-hallucination RAG product. Production GenAI on Kafka, Kubernetes, and Airflow — not notebooks. Most recently built **agentic developer tooling** (LLM-driven test generation and code understanding).
 
 ---
 
@@ -26,10 +26,10 @@ AI/GenAI Engineer with 5 years across software and applied AI engineering, the l
 ## Professional Experience
 
 ### Infobell IT Solutions — *Software Engineer, AI*
-**March 2024 – Present | Bengaluru, India**
+**March 2024 – October 2026 | Bengaluru, India**
 
-- **AI Test-Automation Platform (agentic):** Co-lead of an agentic platform, entering alpha with a global semiconductor client, that clones a repository, uses LLMs to map its signatures, call graph, and workflows, then generates test suites (API, workflow, security/edge-case) under budget-driven or coverage-driven modes. Own the execution layer: execution architecture, an LLM self-healing loop that repairs tests mid-run, GitHub Actions CI/CD, credentials and role-based access control, Allure reporting, and a model layer supporting on-premises LLMs plus Vertex AI and Azure.
-- **Test-Automation, cont.:** Added an LLM self-review loop to correct schema-mismatched generated tests, PR blast-radius analysis (1/2/3-hop impact), and a specification-coverage "certification" scoring PRD coverage, security, and API surface. Playwright-driven front-end testing is planned for a later phase.
+- **AI Test-Automation Platform (agentic):** Co-led an agentic platform, taken into alpha with a global semiconductor client, that cloned a repository, used LLMs to map its signatures, call graph, and workflows, then generated test suites (API, workflow, security/edge-case) under budget-driven or coverage-driven modes. Owned the execution layer: execution architecture, an LLM self-healing loop that repairs tests mid-run, GitHub Actions CI/CD, credentials and role-based access control, Allure reporting, and a model layer supporting on-premises LLMs plus Vertex AI and Azure.
+- **Test-Automation, cont.:** Added an LLM self-review loop to correct schema-mismatched generated tests, PR blast-radius analysis (1/2/3-hop impact), and a specification-coverage "certification" scoring PRD coverage, security, and API surface. Playwright-driven front-end testing was planned for a later phase.
 - **Incident Resolution Assistant:** Built the retrieval engine and event-driven pipeline for an enterprise SRE incident-resolution assistant on a major public cloud; scaled from a 20-user POC to a **200+-SRE beta**, and **cut time-to-find similar incidents ~70% (15–20 min → ~5 min, measured with SREs).** Delivered to production and transitioned ownership to the client's in-house team.
 - **Advanced Retrieval:** Diagnosed the failure of semantic (cosine) search on near-duplicate incident data and rebuilt it as **hybrid retrieval** with structured filtering and identifier masking (a privacy-preserving design), **roughly doubling similar-incident recall (~30% → ~80%).** Deployed on Kubernetes with custom Helm charts.
 - **Event Pipeline:** Engineered a Kafka + Elasticsearch pipeline ingesting incidents from ServiceNow into fan-out services — summarization, resolution-step generation grounded on incident data and GitHub runbooks, related-incident surfacing, and change analysis.
