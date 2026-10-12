@@ -1,7 +1,5 @@
-LLM_API_KEY=...
-# LLM_BASE_URL=http://localhost:3001/v1   # local Freellmapi gateway (dev only)
-# LLM_CHAT_MODEL=gemini-3.5-flash
-# LLM_EMBED_MODEL=gemini-embedding-001
 TURNSTILE_SECRET_KEY=...
 PORTFOLIO_ORIGIN=http://localhost:5173
 ENV=dev
+# LLM: no key needed. Chat + embeddings use the Workers AI binding (see wrangler.toml [ai]).
+# Optional overrides: LLM_CHAT_MODEL, LLM_EMBED_MODEL (a new embed model needs a corpus rebuild).

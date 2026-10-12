@@ -2,15 +2,14 @@ import { readFile, writeFile } from "node:fs/promises";
 
 const RESUME_PATH = process.env.RESUME_PATH ?? "/repo-data/resume.md";
 const CORPUS_OUT = process.env.CORPUS_OUT ?? "data/corpus.json";
-const LLM_API_KEY = process.env.LLM_API_KEY;
-const LLM_BASE_URL = (process.env.LLM_BASE_URL ?? "https://generativelanguage.googleapis.com/v1beta/openai").replace(/\/+$/, "");
-const EMBED_MODEL = process.env.LLM_EMBED_MODEL ?? "gemini-embedding-001";
-const EMBED_DIMENSIONS = 768; // keep in sync with src/lib/llm.ts
-const CORPUS_VERSION = process.env.CORPUS_VERSION ?? "v5";
+const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
+const CF_API_TOKEN = process.env.CF_API_TOKEN; // needs Workers AI read/run permission
+const EMBED_MODEL = process.env.LLM_EMBED_MODEL ?? "@cf/baai/bge-base-en-v1.5"; // keep in sync with src/lib/llm.ts
+const CORPUS_VERSION = process.env.CORPUS_VERSION ?? "v6";
 const MAX_CHUNK_CHARS = 1500;
 
-if (!LLM_API_KEY) {
-  console.error("LLM_API_KEY not set");
+if (!CF_ACCOUNT_ID || !CF_API_TOKEN) {
+  console.error("CF_ACCOUNT_ID and CF_API_TOKEN must be set");
   process.exit(1);
 }
 
@@ -40,29 +39,34 @@ for (const section of sections) {
 
 console.log(`Embedding ${chunks.length} chunks…`);
 
-const res = await fetch(`${LLM_BASE_URL}/embeddings`, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${LLM_API_KEY}`,
+const res = await fetch(
+  `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/${EMBED_MODEL}`,
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${CF_API_TOKEN}` },
+    body: JSON.stringify({ text: chunks }),
   },
-  body: JSON.stringify({ model: EMBED_MODEL, input: chunks, dimensions: EMBED_DIMENSIONS }),
-});
+);
 
 if (!res.ok) {
   console.error(`Embeddings request failed: ${res.status} ${await res.text()}`);
   process.exit(1);
 }
 
-const data = await res.json() as { data: Array<{ embedding: number[] }> };
+const body = await res.json() as { result: { data: number[][] } };
+const vectors = body.result.data;
+if (vectors.length !== chunks.length) {
+  console.error(`Expected ${chunks.length} vectors, got ${vectors.length}`);
+  process.exit(1);
+}
 
 const corpus = {
   version: CORPUS_VERSION,
   model: EMBED_MODEL,
-  dimensions: EMBED_DIMENSIONS,
+  dimensions: vectors[0].length,
   chunks: chunks.map((text, i) => ({
     text,
-    embedding: data.data[i].embedding,
+    embedding: vectors[i],
   })),
 };
 

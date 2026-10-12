@@ -73,41 +73,26 @@ export async function handleProjectSummary(request: Request, env: Env, slug: str
 
   // Generate or fetch summary
   let summary: string;
-  if (env.LLM_API_KEY) {
-    // Call the LLM provider to generate summary
+  if (env.AI) {
+    // Generate with Workers AI; fall back to the canned summary on any failure
     try {
       const llm = llmConfig(env);
-      const llmRes = await fetch(`${llm.baseUrl}/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${llm.apiKey}`,
-        },
-        body: JSON.stringify({
-          model: llm.chatModel,
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are a technical writer. Generate a concise (~120 word) case study summary of the project based on the provided information.",
-            },
-            {
-              role: "user",
-              content: `Project: ${metadata.title}\n\nDescription: ${metadata.description}\n\nTechnologies: ${metadata.technologies.join(", ")}\n\nProvide a 1-paragraph summary suitable for a portfolio.`,
-            },
-          ],
-          max_tokens: 600,
-        }),
+      const out = await env.AI.run(llm.chatModel, {
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a technical writer. Generate a concise (~120 word) case study summary of the project based on the provided information.",
+          },
+          {
+            role: "user",
+            content: `Project: ${metadata.title}\n\nDescription: ${metadata.description}\n\nTechnologies: ${metadata.technologies.join(", ")}\n\nProvide a 1-paragraph summary suitable for a portfolio.`,
+          },
+        ],
+        max_tokens: 400,
       });
-
-      if (!llmRes.ok) {
-        summary = await generateSummary(slug, metadata);
-      } else {
-        const data = (await llmRes.json()) as {
-          choices: Array<{ message: { content: string } }>;
-        };
-        summary = data.choices[0]?.message.content ?? (await generateSummary(slug, metadata));
-      }
+      const text = (out?.response ?? out?.choices?.[0]?.message?.content ?? "") as string;
+      summary = text.trim() || (await generateSummary(slug, metadata));
     } catch {
       summary = await generateSummary(slug, metadata);
     }

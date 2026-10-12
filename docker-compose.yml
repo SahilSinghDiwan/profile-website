@@ -28,7 +28,6 @@ services:
       - ./api:/app
       - /app/node_modules
     environment:
-      - LLM_API_KEY=${LLM_API_KEY:-}
       - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY:-}
       - PORTFOLIO_ORIGIN=http://localhost:5173
       - ENV=dev

@@ -19,16 +19,22 @@ binding = "RATE_LIMIT"
 id = "REPLACE_WITH_KV_ID"
 preview_id = "REPLACE_WITH_PREVIEW_KV_ID"
 
+# Workers AI binding (chat + embeddings; no API key). `wrangler dev` uses remote AI.
+[ai]
+binding = "AI"
+
 # ---- Dev (deployed Worker: profile-api-dev) ----
 # Deploy:       wrangler deploy --env dev
-# Set secrets:  wrangler secret put LLM_API_KEY --env dev
-#               wrangler secret put TURNSTILE_SECRET_KEY --env dev
+# Set secrets:  wrangler secret put TURNSTILE_SECRET_KEY --env dev   (LLM needs no secret: Workers AI binding)
 [env.dev]
 name = "profile-api-dev"
 
 [env.dev.vars]
 PORTFOLIO_ORIGIN = "http://localhost:5173,https://profile-website-git-dev-sahils-projects-22d5c9eb.vercel.app,https://myprofile.nostalkers.shop,https://nostalkers.shop,https://profile-website-orcin.vercel.app"
 ENV = "dev"
+
+[env.dev.ai]
+binding = "AI"
 
 [[env.dev.kv_namespaces]]
 binding = "CACHE"

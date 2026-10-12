@@ -2,13 +2,13 @@ import type { Env } from "../index";
 import { cacheKey, createKvCache, CORPUS_VERSION } from "../lib/cache";
 import { checkRateLimit, clientIp, rateLimitHeaders } from "../lib/ratelimit";
 import { verifyTurnstile } from "../lib/turnstile";
-import { llmConfig, EMBED_DIMENSIONS } from "../lib/llm";
+import { llmConfig, embedText, deltaText } from "../lib/llm";
 import bundledCorpus from "../../data/corpus.json";
 
 const RL_CFG = { limit: 10, windowSec: 60 };
-// Calibrated for gemini-embedding-001 @768d (2026-10-12): off-topic 0.41-0.48, on-topic 0.51-0.70.
+// Calibrated for @cf/baai/bge-base-en-v1.5 (2026-10-12): off-topic 0.45-0.53, on-topic 0.56-0.77.
 // Re-measure if the embedding model changes. The system prompt is the second guard.
-const RELEVANCE_THRESHOLD = 0.49;
+const RELEVANCE_THRESHOLD = 0.55;
 
 interface Chunk {
   text: string;
@@ -41,28 +41,6 @@ function cosineSimilarity(a: number[], b: number[]): number {
   }
   const denominator = Math.sqrt(normA) * Math.sqrt(normB);
   return denominator === 0 ? 0 : dotProduct / denominator;
-}
-
-async function embedQuestion(text: string, env: Env): Promise<number[] | null> {
-  const llm = llmConfig(env);
-  // Free-tier providers return transient 429/5xx under bursts; retry once.
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const res = await fetch(`${llm.baseUrl}/embeddings`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${llm.apiKey}` },
-      body: JSON.stringify({ model: llm.embedModel, input: text, dimensions: EMBED_DIMENSIONS }),
-    });
-    if (res.ok) {
-      const data = (await res.json()) as { data: Array<{ embedding: number[] }> };
-      return data.data[0]?.embedding ?? null;
-    }
-    if (attempt === 0 && (res.status === 429 || res.status >= 500)) {
-      await new Promise((r) => setTimeout(r, 400));
-      continue;
-    }
-    return null;
-  }
-  return null;
 }
 
 export async function handleChat(request: Request, env: Env): Promise<Response> {
@@ -146,10 +124,10 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
   }
 
   // Embed the question with the same model used to build the corpus
-  if (!env.LLM_API_KEY) {
+  if (!env.AI) {
     return new Response(JSON.stringify({ error: "embedding_unavailable" }), { status: 500 });
   }
-  const questionEmbedding = await embedQuestion(question, env);
+  const questionEmbedding = await embedText(env, question);
   if (!questionEmbedding) {
     return new Response(JSON.stringify({ error: "embedding_failed" }), { status: 502 });
   }
@@ -174,7 +152,7 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
   }
 
   // Check if the LLM provider is configured
-  if (!env.LLM_API_KEY) {
+  if (!env.AI) {
     const response =
       "I'm unable to generate a response right now. The AI backend is not configured. Please check back later.";
     headers.set("Content-Type", "text/event-stream");
@@ -191,35 +169,23 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
   headers.set("X-Cache-Status", "miss");
 
   const context = topChunks.join("\n\n");
+  const today = new Date().toISOString().slice(0, 10);
   const systemPrompt =
-    "You are a Q&A assistant for Sahil Diwan's portfolio. Answer ONLY using the provided context. If unknown, say so. Format replies in concise GitHub-flavored markdown — short paragraphs, bullet lists where helpful.";
+    `You are a Q&A assistant for Sahil Diwan's portfolio. Today's date is ${today}; dates up to today are in the past, not typos. Always refer to Sahil in the third person ("Sahil", "he"). Answer ONLY using the provided context. If the question is not about Sahil's background, skills, projects or experience (for example poems, trivia, maths, coding help), do not answer it: reply that you can only answer questions about Sahil's portfolio and experience. If the context does not contain the answer, say so. Format replies in concise GitHub-flavored markdown — short paragraphs, bullet lists where helpful.`;
 
   try {
     const llm = llmConfig(env);
-    const llmRes = await fetch(`${llm.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${llm.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: llm.chatModel,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "system", content: `Context:\n${context}` },
-          ...turns,
-        ],
-        stream: true,
-        max_completion_tokens: 800,
-        reasoning_effort: "minimal",
-      }),
-    });
+    const aiStream = (await env.AI.run(llm.chatModel, {
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "system", content: `Context:\n${context}` },
+        ...turns,
+      ],
+      stream: true,
+      max_tokens: 800,
+    })) as ReadableStream<Uint8Array> | null;
 
-    if (!llmRes.ok) {
-      return new Response(JSON.stringify({ error: "llm_error" }), { status: 502 });
-    }
-
-    const reader = llmRes.body?.getReader();
+    const reader = aiStream?.getReader();
     if (!reader) {
       return new Response(JSON.stringify({ error: "no_stream" }), { status: 500 });
     }
@@ -237,8 +203,7 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
           const data = line.slice(6);
           if (data === "[DONE]") return;
           try {
-            const parsed = JSON.parse(data) as { choices: Array<{ delta: { content?: string } }> };
-            const content = parsed.choices[0]?.delta?.content ?? "";
+            const content = deltaText(JSON.parse(data));
             if (content) {
               fullResponse += content;
               if (fullResponse.length > 1600) {
@@ -280,6 +245,7 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
 
     return new Response(responseStream, { status: 200, headers });
   } catch (error) {
-    return new Response(JSON.stringify({ error: "streaming_error" }), { status: 500 });
+    console.warn(`chat run failed: ${String(error).slice(0, 200)}`);
+    return new Response(JSON.stringify({ error: "llm_error" }), { status: 502 });
   }
 }

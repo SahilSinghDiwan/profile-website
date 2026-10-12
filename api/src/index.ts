@@ -5,8 +5,7 @@ import { handleProjectSummary } from "./routes/project-summary";
 export interface Env {
   CACHE: KVNamespace;
   RATE_LIMIT: KVNamespace;
-  LLM_API_KEY: string;
-  LLM_BASE_URL?: string;
+  AI: import("./lib/llm").AiBinding;
   LLM_CHAT_MODEL?: string;
   LLM_EMBED_MODEL?: string;
   TURNSTILE_SECRET_KEY: string;
