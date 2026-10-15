@@ -1,0 +1,29 @@
+{
+  "slug": "2026-10-15-llmops-d0aa52",
+  "title": "A retrieval demo for 20 users is a notebook.",
+  "date": "2026-10-15",
+  "pillar": "llmops",
+  "format": "belief-shift",
+  "body": "A retrieval demo for 20 users is a notebook. The same thing for 200+ SREs is Kafka, Kubernetes, and Airflow, and most of the work lives there.\n\nThe model work that sold the POC barely changed between 20 users and 200. What changed was everything underneath.\n\nIncidents had to land from ServiceNow into a Kafka stream and fan out to services that each did one job: summarize, surface related past incidents, generate candidate resolution steps. Each one subscribes, fails on its own, and retries without taking the others down. A notebook never hits that, because a notebook has one user rerunning a cell.\n\nThe batch and anomaly side ran on Airflow, deployed on Kubernetes with Helm on the client's cloud. That sentence is weeks of work nobody sees in a demo.\n\nThe POC proved the idea was worth building. It also hid the real cost: turning one happy path into something 200 people hit at once and trust.\n\nThe prompt is the cheap part. Ask what happens to it after the notebook.",
+  "hashtags": [
+    "#LLMOps",
+    "#Kubernetes",
+    "#Kafka",
+    "#AIEngineering"
+  ],
+  "cardImage": "/writing/2026-10-15-llmops-d0aa52.png",
+  "linkedinUrl": "",
+  "longform": "## The demo was never the hard part\n\nA retrieval demo for 20 users is a notebook. One person reruns a cell, reads the output, and moves on. On the Incident Resolution Assistant, the model work that sold the POC barely changed on the way to 200+ SREs. Everything underneath it did, and that is where most of the work went.\n\n## What broke when it stopped being a notebook\n\nA notebook has one user and one happy path. Once 200+ SREs depend on a system, you have to answer questions the notebook never raised. What happens when one step fails? What happens when two things need the same incident at the same moment?\n\nSo incidents had to arrive from ServiceNow in a stream. I built the ingester to land them on Kafka. The ingester doesn't do the thinking. Subscriber services do, and each does one job: summarize the incident, surface related past incidents, generate candidate resolution steps. Each subscribes on its own, fails on its own, and retries without taking the others down. If the summarizer has a bad hour, SREs can still see related incidents.\n\nThat isolation costs real design work, and a notebook never asks for any of it.\n\n## The part nobody sees in a demo\n\nThe batch and anomaly side ran on Airflow, deployed on Kubernetes with Helm on the client's cloud. The Apache Airflow project ships an official Helm chart that bootstraps an Airflow deployment on a Kubernetes cluster, so the install is documented. The work is in making it run reliably inside someone else's cloud and networking, with their constraints. That sentence in a status update is weeks of work, and it never shows up in a demo.\n\nThe retrieval engine needed its own redesign along the way: cosine similarity gave way to hybrid search with filtering. That is a separate story, and the retrieval work is where I'd go if you want depth on the model side. This article is about what surrounds it.\n\n## Why this matters more than the prompt\n\nThe POC proved the idea was worth building. It also hid the real cost: turning one happy path into something 200 people hit at once and trust.\n\nThis isn't a new observation. Sculley et al. (NeurIPS 2015), in \"Hidden Technical Debt in Machine Learning Systems,\" argue that quick wins in ML systems aren't free. They point to ongoing maintenance costs, and to risks such as boundary erosion, entanglement, and hidden data dependencies. Each Kafka subscriber with a clear, narrow job is a small defence against that kind of entanglement. I didn't set out to apply the paper. The paper just names the failure that the design avoids.\n\nTo be exact about the scope: this was a beta with 200+ SREs, not full production, and I say beta on purpose. The contract ended with the platform handed to the client's team, who now own and operate it.\n\nThe prompt is the cheap part. Ask what happens to it after the notebook.",
+  "references": [
+    {
+      "title": "Sculley et al. — Hidden Technical Debt in Machine Learning Systems (NeurIPS 2015)",
+      "url": "https://papers.nips.cc/paper_files/paper/2015/hash/86df7dcfd896fcaf2674f757a2463eba-Abstract.html",
+      "note": "Argues that ML quick wins carry large ongoing maintenance costs and lists risk factors such as boundary erosion, entanglement, hidden feedback loops and data dependencies."
+    },
+    {
+      "title": "Apache Airflow — Helm Chart for Apache Airflow (official documentation)",
+      "url": "https://airflow.apache.org/docs/helm-chart/stable/index.html",
+      "note": "Official docs for the chart that bootstraps an Airflow deployment on Kubernetes using Helm."
+    }
+  ]
+}
