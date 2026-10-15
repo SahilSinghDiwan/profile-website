@@ -201,7 +201,7 @@ Constants: `EXPERIENCE_BULLET_PREVIEW_COUNT = 2`, `SKILL_PREVIEW_COUNT = 8` (top
 
 1. Parse JSON body. Accept either `{messages: [{role, content}, …], turnstileToken}` (multi-turn) or `{question, turnstileToken}` (legacy single-turn). Hard-cap at 12 turns × 2000 chars per turn.
 2. `turnstileToken` required → 401 `missing_turnstile_token` if absent.
-3. Verify Turnstile via `verifyTurnstile()` — bypassed only when `env.ENV === "dev"` *and* request has `?dev=1`.
+3. Verify Turnstile via `verifyTurnstile()` — bypassed only when `env.ENV === "local"` (top-level `[vars]`: `wrangler dev` and tests, never a deployed env) *and* request has `?dev=1`.
 4. Rate-limit by IP (10/60s).
 5. SHA-256 cache key on `JSON.stringify(turns) + CORPUS_VERSION` (currently `v3`). Hit returns 200 `text/event-stream` with `X-Cache-Status: hit`.
 6. Embed the **last user turn** via OpenAI `text-embedding-3-small`.

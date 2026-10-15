@@ -86,8 +86,8 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
     return new Response(JSON.stringify({ error: "missing_turnstile_token" }), { status: 401 });
   }
 
-  // Verify Turnstile (unless dev mode)
-  const isDev = env.ENV === "dev" && new URL(request.url).searchParams.has("dev");
+  // Verify Turnstile (unless local: `wrangler dev` and tests; never a deployed env)
+  const isDev = env.ENV === "local" && new URL(request.url).searchParams.has("dev");
   if (!isDev) {
     try {
       const turnstileResult = await verifyTurnstile(env.TURNSTILE_SECRET_KEY, turnstileToken);

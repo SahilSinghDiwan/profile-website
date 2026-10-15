@@ -5,7 +5,8 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 PORTFOLIO_ORIGIN = "http://localhost:5173"
-ENV = "dev"
+# "local" enables the ?dev Turnstile bypass; deployed envs must not use it.
+ENV = "local"
 
 # Top-level KV bindings — used by `wrangler dev` (local Miniflare).
 # IDs are placeholders; local dev uses in-memory KV.
