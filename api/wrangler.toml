@@ -31,7 +31,7 @@ binding = "AI"
 name = "profile-api-dev"
 
 [env.dev.vars]
-PORTFOLIO_ORIGIN = "http://localhost:5173,https://profile-website-git-dev-sahils-projects-22d5c9eb.vercel.app,https://myprofile.nostalkers.shop,https://nostalkers.shop,https://profile-website-orcin.vercel.app"
+PORTFOLIO_ORIGIN = "http://localhost:5173,https://profile-website-git-dev-sahils-projects-22d5c9eb.vercel.app,https://myprofile.sahildiwan.in,https://sahildiwan.in,https://profile-website-orcin.vercel.app"
 ENV = "dev"
 
 [env.dev.ai]

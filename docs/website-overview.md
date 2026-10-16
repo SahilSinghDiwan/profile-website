@@ -2,7 +2,7 @@
 
 Reference for future sessions: architecture, content, conventions, and the gotchas that survived the v2 rebuild. Read this first when resuming work.
 
-> Status: v2 implementation complete (May 2026). Production at `nostalkers.shop`, dev preview from the `dev` branch. The Cloudflare Worker serves a RAG-backed Portfolio Assistant chat over a bundled embeddings corpus.
+> Status: v2 implementation complete (May 2026). Production at `sahildiwan.in`, dev preview from the `dev` branch. The Cloudflare Worker serves a RAG-backed Portfolio Assistant chat over a bundled embeddings corpus.
 
 ---
 
@@ -12,9 +12,9 @@ Reference for future sessions: architecture, content, conventions, and the gotch
 
 | | URL | Notes |
 |---|---|---|
-| Production frontend | `https://nostalkers.shop` | Vercel custom domain, deploys from `main`. Vercel SSO disabled on the apex. |
+| Production frontend | `https://sahildiwan.in` | Vercel custom domain, deploys from `main`. Vercel SSO disabled on the apex. |
 | Dev preview frontend | `https://profile-website-git-dev-sahils-projects-22d5c9eb.vercel.app` | Vercel preview, deploys from `dev`. SSO is *on* by default — disable temporarily via `PATCH /v9/projects/profile-website {ssoProtection: null}` if you need automation, then restore. |
-| Production API | `https://profile-api.diwan-sahilsingh.workers.dev` (planned `api.nostalkers.shop`) | Worker name `profile-api` (default env). |
+| Production API | `https://profile-api.diwan-sahilsingh.workers.dev` (planned `api.sahildiwan.in`) | Worker name `profile-api` (default env). |
 | Dev API | `https://profile-api-dev.diwan-sahilsingh.workers.dev` | Worker name `profile-api-dev` (`[env.dev]` block in `api/wrangler.toml`). |
 
 ### Stack
@@ -257,7 +257,7 @@ Constants: `EXPERIENCE_BULLET_PREVIEW_COUNT = 2`, `SKILL_PREVIEW_COUNT = 8` (top
 
 ### Cloudflare Turnstile widget
 
-- Sitekey `0x4AAAAAADFhkVYoGHa2wMUp`, mode `managed`, allowed domains `nostalkers.shop` + the dev Vercel preview. Add `localhost` *temporarily* if you need to run automated tests against `http://localhost:5173`.
+- Sitekey `0x4AAAAAADFhkVYoGHa2wMUp`, mode `managed`, allowed domains `sahildiwan.in` + the dev Vercel preview. Add `localhost` *temporarily* if you need to run automated tests against `http://localhost:5173`.
 - Manage via API: `GET/PUT /accounts/{CLOUDFLARE_ACCOUNT_ID}/challenges/widgets[/{sitekey}]`.
 
 ### Pi-specific quirks

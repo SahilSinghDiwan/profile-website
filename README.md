@@ -1,12 +1,12 @@
 # Sahil Singh Diwan — Portfolio
 
-Personal portfolio site at `nostalkers.shop`. Multi-page React app on Vercel + a Cloudflare Worker that serves a RAG-backed chat assistant trained on the resume corpus.
+Personal portfolio site at `sahildiwan.in`. Multi-page React app on Vercel + a Cloudflare Worker that serves a RAG-backed chat assistant trained on the resume corpus.
 
 ## Surfaces
 
 | | URL |
 |---|---|
-| Production frontend | `https://nostalkers.shop` (Vercel, deploys from `main`) |
+| Production frontend | `https://sahildiwan.in` (Vercel, deploys from `main`) |
 | Dev preview frontend | `https://profile-website-git-dev-sahils-projects-22d5c9eb.vercel.app` (Vercel, deploys from `dev`) |
 | Production API | `https://profile-api.diwan-sahilsingh.workers.dev` |
 | Dev API | `https://profile-api-dev.diwan-sahilsingh.workers.dev` |

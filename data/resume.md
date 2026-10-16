@@ -1,7 +1,7 @@
 # Sahil Singh Diwan
 
 Bengaluru, India | +91 800-7192-680 | [diwan.sahilsingh@gmail.com](mailto:diwan.sahilsingh@gmail.com)
-[LinkedIn](https://linkedin.com/in/diwan-sahil) | [GitHub](https://github.com/SahilSinghDiwan) | [Portfolio](https://myprofile.nostalkers.shop) | [Live demo: convogene.ai](https://convogene.ai)
+[LinkedIn](https://linkedin.com/in/diwan-sahil) | [GitHub](https://github.com/SahilSinghDiwan) | [Portfolio](https://myprofile.sahildiwan.in) | [Live demo: convogene.ai](https://convogene.ai)
 
 ---
 

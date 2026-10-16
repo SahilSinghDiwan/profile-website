@@ -543,7 +543,7 @@ Add to `apps/api/.dev.vars` (Worker, gitignored):
 ```
 OPENAI_API_KEY=sk-…
 TURNSTILE_SECRET_KEY=…
-PORTFOLIO_ORIGIN=https://myprofile.nostalkers.shop
+PORTFOLIO_ORIGIN=https://myprofile.sahildiwan.in
 ```
 
 Production: set these via `wrangler secret put` and Vercel project env vars.
@@ -582,7 +582,7 @@ To keep scope honest:
 ## 8. Acceptance Criteria (whole project done when…)
 
 1. All Phase 0 tasks merged.
-2. All Track A tasks deployed to `api.nostalkers.shop` (or wherever).
+2. All Track A tasks deployed to `api.sahildiwan.in` (or wherever).
 3. All Track B + C tasks merged + deployed to Vercel.
 4. Live: typing a question in the floating bubble streams a coherent answer about Sahil's resume.
 5. Live: `/projects` shows pinned + auto GitHub feed, filterable by tech.
