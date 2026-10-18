@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Command } from "cmdk";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Download, Moon, Sun, Mail, Navigation } from "lucide-react";
+import { Download, Moon, Sun, Navigation } from "lucide-react";
 import { useCmdK } from "../hooks/useCmdK";
 
 interface CommandAction {
@@ -152,21 +152,6 @@ export function CommandPalette() {
         link.download = "Sahil_Diwan_Resume.pdf";
         link.click();
         setOpen(false);
-      },
-    },
-    {
-      id: "email",
-      title: "Copy Email",
-      icon: <Mail className="w-4 h-4" />,
-      keywords: ["email", "copy", "mail", "contact"],
-      action: async () => {
-        try {
-          await navigator.clipboard.writeText("diwan.sahilsingh@gmail.com");
-          setOpen(false);
-        } catch {
-          // Fallback: just close the palette
-          setOpen(false);
-        }
       },
     },
   ];

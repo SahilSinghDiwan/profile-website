@@ -5,7 +5,7 @@ const CORPUS_OUT = process.env.CORPUS_OUT ?? "data/corpus.json";
 const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
 const CF_API_TOKEN = process.env.CF_API_TOKEN; // needs Workers AI read/run permission
 const EMBED_MODEL = process.env.LLM_EMBED_MODEL ?? "@cf/baai/bge-base-en-v1.5"; // keep in sync with src/lib/llm.ts
-const CORPUS_VERSION = process.env.CORPUS_VERSION ?? "v6";
+const CORPUS_VERSION = process.env.CORPUS_VERSION ?? "v7";
 const MAX_CHUNK_CHARS = 1500;
 
 if (!CF_ACCOUNT_ID || !CF_API_TOKEN) {
@@ -13,7 +13,10 @@ if (!CF_ACCOUNT_ID || !CF_API_TOKEN) {
   process.exit(1);
 }
 
-const resume = await readFile(RESUME_PATH, "utf-8");
+// The PDF resume keeps phone and email; the chat must not repeat them (LinkedIn is the only public contact route).
+const resume = (await readFile(RESUME_PATH, "utf-8"))
+  .replace(/ \| \+91 [\d-]+/g, "")
+  .replace(/ \| \[[^\]]+@[^\]]+\]\(mailto:[^)]+\)/g, "");
 
 const sections = resume.split(/\n(?=## )/g).map(s => s.trim()).filter(Boolean);
 

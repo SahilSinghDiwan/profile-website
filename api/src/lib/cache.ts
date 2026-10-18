@@ -1,4 +1,4 @@
-export const CORPUS_VERSION = "v6";
+export const CORPUS_VERSION = "v7";
 
 async function sha256Hex(input: string): Promise<string> {
   const data = new TextEncoder().encode(input);

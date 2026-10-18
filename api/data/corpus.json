@@ -1,10 +1,10 @@
 {
-  "version": "v6",
+  "version": "v7",
   "model": "@cf/baai/bge-base-en-v1.5",
   "dimensions": 768,
   "chunks": [
     {
-      "text": "# Sahil Singh Diwan\n\nBengaluru, India | +91 800-7192-680 | [diwan.sahilsingh@gmail.com](mailto:diwan.sahilsingh@gmail.com)\n[LinkedIn](https://linkedin.com/in/diwan-sahil) | [GitHub](https://github.com/SahilSinghDiwan) | [Portfolio](https://myprofile.sahildiwan.in) | [Live demo: convogene.ai](https://convogene.ai)\n\n---",
+      "text": "# Sahil Singh Diwan\n\nBengaluru, India\n[LinkedIn](https://linkedin.com/in/diwan-sahil) | [GitHub](https://github.com/SahilSinghDiwan) | [Portfolio](https://myprofile.sahildiwan.in) | [Live demo: convogene.ai](https://convogene.ai)\n\n---",
       "embedding": [
         0.0227203369140625,
         -0.0003254413604736328,

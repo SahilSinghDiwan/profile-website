@@ -1,17 +1,8 @@
-import { Mail, Linkedin, MessageCircle } from "lucide-react";
+import { Linkedin, Youtube } from "lucide-react";
+import { XLogo } from "../components/icons/XLogo";
 import type { Contact } from "../types";
 
 export const contacts: Contact[] = [
-  {
-    type: "Direct",
-    label: "Email",
-    description: "Best for project inquiries, collaboration, and detailed discussions.",
-    detailLabel: "Reach me at",
-    detail: "diwan.sahilsingh@gmail.com",
-    href: "mailto:diwan.sahilsingh@gmail.com",
-    tags: ["Async", "Detailed"],
-    icon: Mail,
-  },
   {
     type: "Network",
     label: "LinkedIn",
@@ -23,13 +14,23 @@ export const contacts: Contact[] = [
     icon: Linkedin,
   },
   {
-    type: "Instant",
-    label: "WhatsApp",
-    description: "Quickest way to reach me for short questions or scheduling a call.",
-    detailLabel: "Message",
-    detail: "+91 800-7192-680",
-    href: "https://wa.me/918007192680?text=Hello,%20I'd%20like%20to%20connect%20regarding%20your%20portfolio.",
-    tags: ["Real-time", "Quick"],
-    icon: MessageCircle,
+    type: "Video",
+    label: "YouTube",
+    description: "Latent Workshop: videos on the mechanisms behind what I'm building.",
+    detailLabel: "Channel",
+    detail: "youtube.com/@latentworkshop",
+    href: "https://www.youtube.com/@latentworkshop",
+    tags: ["Long-form", "Shorts"],
+    icon: Youtube,
+  },
+  {
+    type: "Social",
+    label: "X",
+    description: "Latent Workshop on X: short takes cut from each week's video.",
+    detailLabel: "Profile",
+    detail: "x.com/latent_workshop",
+    href: "https://x.com/latent_workshop",
+    tags: ["Daily", "Short-form"],
+    icon: XLogo,
   },
 ];

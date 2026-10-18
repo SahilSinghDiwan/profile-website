@@ -51,11 +51,6 @@ describe("CommandPalette", () => {
     expect(true).toBe(true);
   });
 
-  it.skip("email command exists in command list", () => {
-    renderWithRouter(<CommandPalette />);
-    expect(true).toBe(true);
-  });
-
   it.skip("ctrl+k also opens palette", () => {
     renderWithRouter(<CommandPalette />);
     expect(true).toBe(true);

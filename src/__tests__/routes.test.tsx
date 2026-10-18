@@ -4,6 +4,7 @@ import { renderWithProviders } from "../test/test-utils";
 import { Routes, Route } from "react-router-dom";
 import Projects from "../pages/Projects";
 import ProjectDetail from "../pages/ProjectDetail";
+import Privacy from "../pages/Privacy";
 import NotFound from "../pages/NotFound";
 
 function TestRoutes() {
@@ -11,6 +12,7 @@ function TestRoutes() {
     <Routes>
       <Route path="/projects" element={<Projects />} />
       <Route path="/projects/:slug" element={<ProjectDetail />} />
+      <Route path="/privacy" element={<Privacy />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -34,5 +36,11 @@ describe("routes", () => {
   it("/projects/unknown-slug renders NotFound", () => {
     renderWithProviders(<TestRoutes />, { initialEntries: ["/projects/does-not-exist"] });
     expect(screen.getByText("404")).toBeInTheDocument();
+  });
+
+  it("/privacy renders the policy, including the Google API Limited Use statement", () => {
+    renderWithProviders(<TestRoutes />, { initialEntries: ["/privacy"] });
+    expect(screen.getByRole("heading", { level: 1, name: /Privacy Policy/i })).toBeInTheDocument();
+    expect(screen.getByText(/Latent Workshop Analytics' use and transfer/i)).toBeInTheDocument();
   });
 });

@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { Github, Mail, Linkedin, Moon, Sun, Menu, X } from 'lucide-react';
+import { Github, Linkedin, Youtube, Moon, Sun, Menu, X } from 'lucide-react';
+import { XLogo } from '../components/icons/XLogo';
 import { Link } from 'react-router-dom';
 import { projects } from '../data/projects';
 import { skills } from '../data/skills';
@@ -472,9 +473,15 @@ const Index = () => {
                 <a href="https://www.linkedin.com/in/diwan-sahil/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                   <Linkedin className="w-5 h-5" />
                 </a>
-                <a href="mailto:diwan.sahilsingh@gmail.com" className="text-muted-foreground hover:text-primary transition-colors">
-                  <Mail className="w-5 h-5" />
+                <a href="https://www.youtube.com/@latentworkshop" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="text-muted-foreground hover:text-primary transition-colors">
+                  <Youtube className="w-5 h-5" />
                 </a>
+                <a href="https://x.com/latent_workshop" target="_blank" rel="noopener noreferrer" aria-label="X" className="text-muted-foreground hover:text-primary transition-colors">
+                  <XLogo className="w-5 h-5" />
+                </a>
+                <Link to="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors self-center">
+                  Privacy
+                </Link>
               </div>
             </div>
           </div>
