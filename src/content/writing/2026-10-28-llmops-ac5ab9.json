@@ -1,0 +1,16 @@
+{
+  "slug": "2026-10-28-llmops-ac5ab9",
+  "title": "My first heal-yield runs rescued anywhere from 9.5% to 52.9% of the tests that f",
+  "date": "2026-10-28",
+  "pillar": "llmops",
+  "format": "proof-drop",
+  "body": "My first heal-yield runs rescued anywhere from 9.5% to 52.9% of the tests that failed first pass.\n\nSame pinned package, same model, same temperature, same repair budget. A single run would have told a very different story depending on which one I picked.\n\nI built heal-yield to measure self-healing test loops: generate tests, run them, repair failures, and keep a ledger of what happened.\n\nThese five complete runs used cachetools at commit 4500e3d, gpt-oss-120b, temperature 0.0, and up to three repair rounds.\n\nAt the low end, repair rescued 2 of 21 first-pass failures. At the high end, 9 of 17.\n\nThat's heal yield: the share of first-pass failures rescued. Overall post-repair pass rates ranged from 36.7% to 70.4%. A passing test had to survive five consecutive executions without a code change.\n\nThere were six runs in total. Run r5 stopped on a gateway 502 at cachetools.keys in round 1, after 8 of 16 calls. I kept its artifacts and marked it generator-failed. Its percentages cover only the candidates reached and must not be compared with complete runs. Run r6 replaced it in the five-run set.\n\nCost was unmetered, not zero. This is one package and one model; mutation score is still deferred.\n\nFor this setup, I can report a spread. I can't turn the best run into a general claim about self-healing tests.",
+  "hashtags": [
+    "#LLMEvaluation",
+    "#TestAutomation",
+    "#PythonTesting",
+    "#GenerativeAI"
+  ],
+  "cardImage": "/writing/2026-10-28-llmops-ac5ab9.png",
+  "linkedinUrl": ""
+}
