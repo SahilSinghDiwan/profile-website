@@ -3,6 +3,14 @@ import type { Credential } from "../types";
 export const credentials: Credential[] = [
   {
     type: "Certification",
+    name: "Claude Certified Architect, Foundations",
+    issuer: "Anthropic",
+    detailLabel: "Issued",
+    detail: "August 2026",
+    tags: ["LLM", "Claude"],
+  },
+  {
+    type: "Certification",
     name: "IBM Cloud Advocate Essentials",
     issuer: "IBM",
     detailLabel: "Issued",
