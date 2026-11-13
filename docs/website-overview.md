@@ -20,7 +20,7 @@ Reference for future sessions: architecture, content, conventions, and the gotch
 ### Stack
 
 - **Frontend**: Vite 7 + React 19 + TypeScript 5.8 + Tailwind v4 + shadcn-style primitives (Radix), TanStack Query, BrowserRouter, Framer Motion, Embla, react-markdown, lucide-react.
-- **Worker** (`api/`): Cloudflare Worker with KV (cache + rate limit), Cloudflare Turnstile bot protection, real-time RAG via OpenAI `text-embedding-3-small` over a bundled `corpus.json`, GPT-5-nano streaming completions.
+- **Worker** (`api/`): Cloudflare Worker with KV (cache + rate limit), Cloudflare Turnstile bot protection, real-time RAG over a bundled `corpus.json`, with Workers AI for embeddings (`@cf/baai/bge-base-en-v1.5`) and streaming chat (`@cf/meta/llama-3.3-70b-instruct-fp8-fast`).
 - **Tooling**: Docker-only dev (no host Node), Vitest + Playwright for tests, Wrangler for the Worker.
 
 ### Repo layout
@@ -48,7 +48,7 @@ profile-website/
 │   │   │                    # ratelimit.ts (KV fixed-window),
 │   │   │                    # turnstile.ts, projects.ts (server-side slug list)
 │   │   └── routes/          # github.ts, chat.ts, project-summary.ts
-│   ├── data/corpus.json     # RAG corpus — real OpenAI embeddings (1536-dim)
+│   ├── data/corpus.json     # RAG corpus — Workers AI bge-base-en-v1.5 embeddings (768-dim)
 │   ├── scripts/build-embeddings.ts
 │   └── wrangler.toml        # default env + [env.dev] block
 │
@@ -67,6 +67,9 @@ profile-website/
 | `/` | `pages/Index.tsx` | Landing page (hero, about, skills, projects, experience, education, contact). Section nav scrolls within this page. |
 | `/projects` | `pages/Projects.tsx` | Pinned projects + GitHub auto-feed + tech filter. |
 | `/projects/:slug` | `pages/ProjectDetail.tsx` | Per-project page with AI summary card and demo embed. |
+| `/writing` | `pages/Writing.tsx` | Index of posts from `src/content/writing/*.json`. |
+| `/writing/:slug` | `pages/WritingDetail.tsx` | Single post. |
+| `/privacy` | `pages/Privacy.tsx` | Privacy notice. |
 | `*` | `pages/NotFound.tsx` | Branded 404. |
 
 `BrowserRouter` (not `HashRouter`) so OG previews unfurl on `/projects/:slug`. SPA fallback in `vercel.json`.
@@ -203,11 +206,11 @@ Constants: `EXPERIENCE_BULLET_PREVIEW_COUNT = 2`, `SKILL_PREVIEW_COUNT = 8` (top
 2. `turnstileToken` required → 401 `missing_turnstile_token` if absent.
 3. Verify Turnstile via `verifyTurnstile()` — bypassed only when `env.ENV === "local"` (top-level `[vars]`: `wrangler dev` and tests, never a deployed env) *and* request has `?dev=1`.
 4. Rate-limit by IP (10/60s).
-5. SHA-256 cache key on `JSON.stringify(turns) + CORPUS_VERSION` (currently `v3`). Hit returns 200 `text/event-stream` with `X-Cache-Status: hit`.
-6. Embed the **last user turn** via OpenAI `text-embedding-3-small`.
-7. Cosine-rank against bundled `corpus.json`. If top score < `RELEVANCE_THRESHOLD` (0.15), return the canned off-topic refusal and cache it.
-8. Stream a completion from `gpt-5-nano` with the full turn list (system + context + history). Reasoning-model parameters: `max_completion_tokens: 800`, `reasoning_effort: "minimal"` (the model rejects `max_tokens` and consumes the whole budget on reasoning without the minimal effort).
-9. SSE parsing buffers across TCP chunk boundaries to avoid dropping leading characters when JSON straddles a chunk. Final response cached for 7 days.
+5. SHA-256 cache key on `JSON.stringify(turns) + CORPUS_VERSION` (currently `v7`). Hit returns 200 `text/event-stream` with `X-Cache-Status: hit`.
+6. Embed the **last user turn** via Workers AI (`@cf/baai/bge-base-en-v1.5`, the same model that built the corpus) through `embedText()` in `api/src/lib/llm.ts`.
+7. Cosine-rank against bundled `corpus.json`. If top score < `RELEVANCE_THRESHOLD` (0.55, calibrated for bge-base-en-v1.5), return the canned off-topic refusal and cache it.
+8. Stream a completion from the Workers AI chat model (`llmConfig(env).chatModel`, default `@cf/meta/llama-3.3-70b-instruct-fp8-fast`) with the full turn list (system + context + history), `max_tokens: 800`.
+9. SSE parsing buffers across TCP chunk boundaries to avoid dropping leading characters when JSON straddles a chunk. The full streamed response is cached for 7 days, unchanged (no truncation); an empty response is never cached.
 
 ### Frontend chat widget — Portfolio Assistant
 
@@ -249,9 +252,10 @@ Constants: `EXPERIENCE_BULLET_PREVIEW_COUNT = 2`, `SKILL_PREVIEW_COUNT = 8` (top
 
 ### Worker (`api/wrangler.toml`)
 
-- Default env → production worker `profile-api`.
+- Default env → local only (`ENV="local"`, placeholder KV ids); do not deploy it.
+- `[env.production]` → `profile-api`, `ENV="production"`, placeholder KV ids to fill in before first deploy.
 - `[env.dev]` → `profile-api-dev`. Vars: `PORTFOLIO_ORIGIN` is comma-separated allowlist; `ENV=dev`.
-- KV namespaces (dev): `CACHE` `a5b1cffbd20a4099a9868ef9ee053f0a`, `RATE_LIMIT` `d12f22be19c443128be8096623ce5cee`. Production needs its own pair — create with `wrangler kv:namespace create CACHE/RATE_LIMIT` and update the default `[[kv_namespaces]]` block before deploying to prod.
+- KV namespaces (dev): `CACHE` `a5b1cffbd20a4099a9868ef9ee053f0a`, `RATE_LIMIT` `d12f22be19c443128be8096623ce5cee`. Production needs its own pair — create with `wrangler kv namespace create CACHE/RATE_LIMIT --env production` and replace the `PLACEHOLDER_...` ids in the `[[env.production.kv_namespaces]]` blocks before deploying.
 - Secrets (set per env via `wrangler secret put <NAME> --env dev` from inside the api Docker image):
   - `TURNSTILE_SECRET_KEY` — must pair with the sitekey above.
 
@@ -276,7 +280,7 @@ VITE_API_BASE_URL=https://profile-api-dev.diwan-sahilsingh.workers.dev \
 # Deploy worker (dev or prod)
 docker compose run --rm --no-deps \
   -e CLOUDFLARE_API_TOKEN -e CLOUDFLARE_ACCOUNT_ID \
-  api npx wrangler deploy --env dev      # or omit --env for prod
+  api npx wrangler deploy --env dev      # or --env production (KV ids in wrangler.toml must be filled in first)
 
 # Regenerate the RAG corpus from data/resume.md
 docker compose run --rm \

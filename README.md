@@ -13,8 +13,8 @@ Personal portfolio site at `sahildiwan.in`. Multi-page React app on Vercel + a C
 
 ## Stack
 
-- **Frontend**: Vite 7 + React 19 + TypeScript 5.8 + Tailwind v4, BrowserRouter (`/`, `/projects`, `/projects/:slug`), shadcn-style primitives, Framer Motion, Embla, react-markdown, lucide-react.
-- **Worker** (`api/`): Cloudflare Worker with KV (cache + rate limit), Turnstile bot protection, real-time RAG over a bundled embeddings corpus, GPT-5-nano streaming completions.
+- **Frontend**: Vite 7 + React 19 + TypeScript 5.8 + Tailwind v4, BrowserRouter (`/`, `/projects`, `/projects/:slug`, `/writing`, `/writing/:slug`, `/privacy`), shadcn-style primitives, Framer Motion, Embla, react-markdown, lucide-react.
+- **Worker** (`api/`): Cloudflare Worker with KV (cache + rate limit), Turnstile bot protection, real-time RAG over a bundled embeddings corpus, Cloudflare Workers AI for embeddings (`@cf/baai/bge-base-en-v1.5`, 768-dim) and streaming chat (`@cf/meta/llama-3.3-70b-instruct-fp8-fast`); no API key needed.
 - **Tooling**: Docker-first dev, Vitest + Playwright for tests, Wrangler for the Worker.
 
 ## Local development
