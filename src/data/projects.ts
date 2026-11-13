@@ -43,7 +43,7 @@ export const projects: Project[] = [
     slug: "rag-chatbot-with-live-internet-access",
     title: "Convogene — Live RAG Product",
     description:
-      "Built and shipped a live, public RAG chatbot (convogene.ai) that answers detailed questions about a semiconductor client's processor lineup. Scheduled scraping via LangGraph/LangChain plus two-layer guardrails — data filtering to exclude embargoed material, and prompt guardrails — drove hallucinations from frequent to near-zero. Deployed on Microsoft Azure.",
+      "Built and shipped a live, public RAG chatbot (convogene.ai) that answers detailed product questions from a hardware vendor's public documentation. Scheduled scraping via LangGraph/LangChain plus two-layer guardrails — data filtering to exclude embargoed material, and prompt guardrails — drove hallucinations from frequent to near-zero. Deployed on Microsoft Azure.",
     technologies: ["LangChain", "RAG", "Microsoft Azure", "Python"],
     impact: "Live in production — hallucinations frequent → near-zero",
     category: "RAG Architecture",
