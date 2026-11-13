@@ -25,6 +25,11 @@ AI/GenAI Engineer with 5 years across software and applied AI engineering, the l
 
 ## Professional Experience
 
+### AuxoAI — *Senior Associate, Engineering*
+**November 2026 – Present | Bengaluru, India**
+
+- Engineering role in applied AI and GenAI.
+
 ### Infobell IT Solutions — *Software Engineer, AI*
 **March 2024 – October 2026 | Bengaluru, India**
 

@@ -2,17 +2,25 @@ import type { ExperienceJob } from "../types";
 
 export const experience: ExperienceJob[] = [
   {
+    role: "Senior Associate – Engineering",
+    company: "AuxoAI",
+    location: "Bengaluru, India",
+    period: "November 2026 - Present",
+    bullets: ["Engineering role in applied AI and GenAI."],
+    tech: [],
+  },
+  {
     role: "Software Engineer - AI",
     company: "Infobell IT Solutions",
     location: "Bengaluru, India",
-    period: "March 2024 - Present",
+    period: "March 2024 - October 2026",
     bullets: [
       "Built the retrieval engine and Python microservices behind an AI incident-resolution assistant; scaled it from a 20-user POC to a 200+ SRE beta and cut time-to-find similar incidents ~70% (15–20 min → ~5 min).",
       "Engineered a Kafka + Elasticsearch event-driven pipeline (ServiceNow ingestion → summarization, resolution-step generation, related-incident surfacing), with confidentiality-preserving masking of region/time/identifiers so matching ran on incident semantics.",
-      "Rebuilt failing cosine search as hybrid retrieval (semantic + structured filtering + identifier masking) on near-duplicate incident data, roughly doubling recall (~30% → ~80%); deployed full-stack on Kubernetes with custom Helm charts.",
+      "Rebuilt failing cosine search as hybrid retrieval (semantic + structured filtering + identifier masking) on near-duplicate incident data, roughly doubling recall (~30% → ~80%); deployed it full-stack on Kubernetes with custom Helm charts.",
       "Built a cloud-native anomaly detection system on Airflow + Kubernetes for data-center-scale datasets.",
       "Built and shipped convogene.ai, a live public RAG chatbot; two-layer guardrails (scraped-data filtering + prompt) drove hallucinations from frequent to near-zero. Deployed on Microsoft Azure.",
-      "Owned end-to-end multimodal AI generative solution; fine-tuned an instruct-pix2pix model and managed the final application rollout.",
+      "Owned an end-to-end multimodal generative AI solution; fine-tuned an instruct-pix2pix model and managed the final application rollout.",
     ],
     tech: [
       "Python",
