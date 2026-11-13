@@ -139,4 +139,23 @@ describe("POST /api/chat", () => {
     expect(res2.headers.get("X-Cache-Status")).toBe("hit");
     expect(await res2.text()).toBe(live);
   });
+
+  it.each(["production", "dev", "Local", "local ", ""])(
+    "?dev does not bypass Turnstile when ENV is %j",
+    async (envName) => {
+      const req = new Request("https://api.test/api/chat?dev=1", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: "Tell me about your experience", turnstileToken: "x" }),
+      });
+      // No TURNSTILE_SECRET_KEY: verification fails closed, so the bypass must not apply.
+      const res = await handleChat(req, {
+        ...(env as any),
+        ENV: envName,
+        TURNSTILE_SECRET_KEY: undefined,
+        AI: fakeAi(relevantVec),
+      });
+      expect(res.status).toBe(401);
+    },
+  );
 });

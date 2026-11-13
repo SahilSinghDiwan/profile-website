@@ -5,7 +5,8 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 PORTFOLIO_ORIGIN = "http://localhost:5173"
-# "local" enables the ?dev Turnstile bypass; deployed envs must not use it.
+# Exactly "local" enables the ?dev Turnstile bypass (see src/routes/chat.ts).
+# Never deploy this default env: use `--env dev` or `--env production`.
 ENV = "local"
 
 # Top-level KV bindings — used by `wrangler dev` (local Miniflare).
@@ -44,3 +45,28 @@ id = "a5b1cffbd20a4099a9868ef9ee053f0a"
 [[env.dev.kv_namespaces]]
 binding = "RATE_LIMIT"
 id = "d12f22be19c443128be8096623ce5cee"
+
+# ---- Production (deployed Worker: profile-api) ----
+# NOT DEPLOYED YET. Before `wrangler deploy --env production`:
+#   1. wrangler kv namespace create CACHE --env production        -> paste id below
+#   2. wrangler kv namespace create RATE_LIMIT --env production    -> paste id below
+#   3. wrangler secret put TURNSTILE_SECRET_KEY --env production
+#   4. confirm VITE_API_BASE_URL in Vercel (Production) points at this Worker.
+# The ?dev Turnstile bypass is disabled here because ENV is not exactly "local".
+[env.production]
+name = "profile-api"
+
+[env.production.vars]
+PORTFOLIO_ORIGIN = "https://sahildiwan.in,https://myprofile.sahildiwan.in,https://profile-website-orcin.vercel.app"
+ENV = "production"
+
+[env.production.ai]
+binding = "AI"
+
+[[env.production.kv_namespaces]]
+binding = "CACHE"
+id = "PLACEHOLDER_REPLACE_WITH_PRODUCTION_CACHE_KV_ID"
+
+[[env.production.kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "PLACEHOLDER_REPLACE_WITH_PRODUCTION_RATE_LIMIT_KV_ID"

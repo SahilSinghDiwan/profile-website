@@ -45,7 +45,7 @@ See `DEV.md` for the full Docker workflow.
   ```bash
   docker compose run --rm --no-deps \
     -e CLOUDFLARE_API_TOKEN -e CLOUDFLARE_ACCOUNT_ID \
-    api npx wrangler deploy --env dev   # or omit --env for prod
+    api npx wrangler deploy --env dev   # or --env production (fill in the KV ids first)
   ```
 
 ## Documentation
