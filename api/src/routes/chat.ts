@@ -206,9 +206,6 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
             const content = deltaText(JSON.parse(data));
             if (content) {
               fullResponse += content;
-              if (fullResponse.length > 1600) {
-                fullResponse = fullResponse.slice(0, 1600);
-              }
               controller.enqueue(encoder.encode(content));
             }
           } catch {
@@ -224,7 +221,11 @@ export async function handleChat(request: Request, env: Env): Promise<Response> 
               if (tail) {
                 for (const line of tail.split("\n")) processLine(line.trim());
               }
-              await cache.set(cacheKey_, fullResponse, 7 * 24 * 60 * 60);
+              // Cache exactly what was streamed (output is bounded by max_tokens),
+              // so a replay matches the live answer. Never cache an empty answer.
+              if (fullResponse.trim().length > 0) {
+                await cache.set(cacheKey_, fullResponse, 7 * 24 * 60 * 60);
+              }
               controller.close();
               break;
             }

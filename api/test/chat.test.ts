@@ -115,4 +115,28 @@ describe("POST /api/chat", () => {
     const res = await ask("Tell me about your projects", ai);
     expect(await res.text()).toBe("Chunky");
   });
+
+  it("does not cache an empty answer", async () => {
+    const ai = fakeAi(relevantVec, "");
+    const res1 = await ask("Empty answer question", ai);
+    expect(await res1.text()).toBe("");
+    const list = await (env as any).CACHE.list();
+    expect(list.keys.filter((k: { name: string }) => k.name.startsWith("cache:"))).toEqual([]);
+
+    const ai2 = fakeAi(relevantVec, "Real answer");
+    const res2 = await ask("Empty answer question", ai2);
+    expect(res2.headers.get("X-Cache-Status")).toBe("miss");
+    expect(await res2.text()).toBe("Real answer");
+  });
+
+  it("cache replay matches a long live answer without truncation", async () => {
+    const long = "word ".repeat(600); // 3000 chars, above the old 1600 cap
+    const ai = fakeAi(relevantVec, long);
+    const live = await (await ask("Long answer question", ai)).text();
+    expect(live).toBe(long);
+
+    const res2 = await ask("Long answer question", fakeAi(relevantVec, "unused"));
+    expect(res2.headers.get("X-Cache-Status")).toBe("hit");
+    expect(await res2.text()).toBe(live);
+  });
 });
