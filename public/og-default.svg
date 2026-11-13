@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#020817"/>
+  <rect x="0" y="0" width="12" height="630" fill="#3b82f6"/>
+  <text x="80" y="290" font-family="Inter, Helvetica, Arial, sans-serif" font-size="84" font-weight="700" fill="#f8fafc">Sahil Singh Diwan</text>
+  <text x="80" y="370" font-family="Inter, Helvetica, Arial, sans-serif" font-size="44" font-weight="500" fill="#3b82f6">AI / GenAI Engineer</text>
+  <text x="80" y="450" font-family="Inter, Helvetica, Arial, sans-serif" font-size="30" fill="#94a3b8">RAG pipelines and production-grade GenAI systems</text>
+  <text x="80" y="560" font-family="Inter, Helvetica, Arial, sans-serif" font-size="28" fill="#94a3b8">sahildiwan.in</text>
+</svg>

@@ -1,3 +1,5 @@
+import writingImages from "virtual:public-writing-images";
+
 export interface SeoProps {
   title: string;
   description: string;
@@ -6,11 +8,25 @@ export interface SeoProps {
   type?: "website" | "article";
 }
 
-const DEFAULT_IMAGE = "/og-default.png";
+const SITE_URL = "https://sahildiwan.in";
+export const DEFAULT_IMAGE = "/og-default.png";
 const SITE_NAME = "Sahil Singh Diwan";
 
+/**
+ * Pick the share image: the requested one if it is an absolute URL or a file that
+ * exists in public/, otherwise the default. Returns an absolute URL (crawlers need one).
+ */
+export function resolveImage(image?: string, available: readonly string[] = writingImages): string {
+  let chosen = DEFAULT_IMAGE;
+  if (image) {
+    if (/^https?:\/\//.test(image)) chosen = image;
+    else if (image === DEFAULT_IMAGE || available.includes(image)) chosen = image;
+  }
+  return chosen.startsWith("/") ? `${SITE_URL}${chosen}` : chosen;
+}
+
 export function Seo({ title, description, url, image, type = "website" }: SeoProps) {
-  const ogImage = image ?? DEFAULT_IMAGE;
+  const ogImage = resolveImage(image);
   return (
     <>
       <title>{title}</title>

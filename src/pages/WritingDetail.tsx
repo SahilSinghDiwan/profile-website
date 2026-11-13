@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
+import writingImages from "virtual:public-writing-images";
 import { Seo } from "../lib/meta";
 import { findPostBySlug } from "../data/writing";
 import NotFound from "./NotFound";
@@ -65,7 +66,7 @@ const WritingDetail = () => {
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">{post.title}</h1>
           </header>
 
-          {post.cardImage && (
+          {post.cardImage && writingImages.includes(post.cardImage) && (
             <img
               src={post.cardImage}
               alt={post.title}

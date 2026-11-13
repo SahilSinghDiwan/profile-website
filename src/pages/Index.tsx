@@ -112,6 +112,7 @@ const Index = () => {
           </div>
         </nav>
 
+        <main>
         {/* Hero Section */}
         <section className="pt-40 pb-24 md:pt-48 md:pb-32 px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
@@ -458,6 +459,8 @@ const Index = () => {
             </div>
           </div>
         </section>
+
+        </main>
 
         {/* Footer */}
         <footer className="py-8 px-4 sm:px-6 lg:px-8 border-t">
