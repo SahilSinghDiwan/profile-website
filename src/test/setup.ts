@@ -33,3 +33,25 @@ if (typeof window !== "undefined" && !window.matchMedia) {
 if (typeof window !== "undefined") {
   Element.prototype.scrollIntoView = vi.fn();
 }
+
+// Node 25+ ships an experimental global localStorage that shadows jsdom's and is
+// unusable without --localstorage-file. Install a simple in-memory Storage instead.
+function createMemoryStorage(): Storage {
+  const map = new Map<string, string>();
+  return {
+    get length() {
+      return map.size;
+    },
+    clear: () => map.clear(),
+    getItem: (k) => (map.has(k) ? (map.get(k) as string) : null),
+    key: (i) => Array.from(map.keys())[i] ?? null,
+    removeItem: (k) => void map.delete(k),
+    setItem: (k, v) => void map.set(k, String(v)),
+  };
+}
+if (typeof window !== "undefined") {
+  for (const name of ["localStorage", "sessionStorage"] as const) {
+    Object.defineProperty(window, name, { configurable: true, value: createMemoryStorage() });
+    Object.defineProperty(globalThis, name, { configurable: true, value: window[name] });
+  }
+}

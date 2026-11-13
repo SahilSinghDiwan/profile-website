@@ -23,7 +23,10 @@ describe("R9 — Data integrity", () => {
     expect(new Set(slugs).size).toBe(slugs.length);
   });
 
-  it("experience has exactly 3 jobs", () => {
-    expect(experience).toHaveLength(3);
+  it("experience has exactly 4 jobs, newest first (AuxoAI, Infobell, ...)", () => {
+    expect(experience).toHaveLength(4);
+    expect(experience[0].company).toBe("AuxoAI");
+    expect(experience[1].company).toBe("Infobell IT Solutions");
+    expect(experience[1].period).toBe("March 2024 - October 2026");
   });
 });
