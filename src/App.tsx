@@ -2,16 +2,20 @@ import { Toaster } from "./components/ui/toaster";
 import { Toaster as Sonner } from "./components/ui/sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
-import Projects from "./pages/Projects";
-import ProjectDetail from "./pages/ProjectDetail";
-import Writing from "./pages/Writing";
-import WritingDetail from "./pages/WritingDetail";
-import Privacy from "./pages/Privacy";
-import NotFound from "./pages/NotFound";
+const Projects = lazy(() => import("./pages/Projects"));
+const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
+const Writing = lazy(() => import("./pages/Writing"));
+const WritingDetail = lazy(() => import("./pages/WritingDetail"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 import { CommandPalette } from "./components/CommandPalette";
-import { ResumeChat } from "./components/ResumeChat";
+// Chat widget (and react-markdown with it) loads after first paint, not in the entry bundle.
+const ResumeChat = lazy(() =>
+  import("./components/ResumeChat").then((m) => ({ default: m.ResumeChat })),
+);
 
 const queryClient = new QueryClient();
 
@@ -22,7 +26,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <CommandPalette />
-        <ResumeChat />
+        <Suspense fallback={null}>
+          <ResumeChat />
+        </Suspense>
+        <Suspense fallback={null}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/projects" element={<Projects />} />
@@ -33,6 +40,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
