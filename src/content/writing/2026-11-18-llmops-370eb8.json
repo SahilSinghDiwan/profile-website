@@ -1,0 +1,34 @@
+{
+  "slug": "2026-11-18-llmops-370eb8",
+  "title": "Post-heal pass rate is the number everyone quotes for a self-healing test loop.",
+  "date": "2026-11-18",
+  "pillar": "llmops",
+  "format": "proof-drop",
+  "body": "Post-heal pass rate is the number everyone quotes for a self-healing test loop. It's the one I trust least.\n\nA healing loop reruns, patches, and retries until the suite goes green. If you only record the final state, every loop looks like magic. You lose the one thing that tells you how good the generation really was: how much passed on the first try, before any healing covered for it.\n\nSo heal-yield, a small harness I built, logs both first-pass and post-heal on every run. heal-yield-runs stores them append-only. Nothing gets overwritten, nothing quietly disappears, including the runs where healing failed and the suite stayed red.\n\nThe failures are the point. First-pass yield tells you whether the model is getting better or whether the healing layer is just working harder to hide a flat generator. Delete the bad runs and you delete your only honest baseline.\n\nGreen at the end isn't the metric. The gap between first-pass and post-heal is.",
+  "hashtags": [
+    "#TestAutomation",
+    "#LLMEval",
+    "#SelfHealingTests",
+    "#AIEngineering"
+  ],
+  "cardImage": "/writing/2026-11-18-llmops-370eb8.png",
+  "linkedinUrl": "",
+  "longform": "## The number everyone quotes\n\nA self-healing test loop is easy to describe. Generate the code or the tests, run the suite, and when something fails, feed the failure back, patch, and rerun. Keep going until the suite is green or you run out of attempts. The number people report at the end is the post-heal pass rate: how much of the suite passed once the loop stopped.\n\nOf all the numbers the loop produces, that's the one I trust least. It isn't wrong. It just answers a different question from the one people think it answers.\n\n## What the final state hides\n\nThe post-heal number mixes up two things: how good the first generation was, and how hard the healing layer worked to cover for it. If you only keep the final state, those two blur together. A run that was green on the first try and a run that needed four rounds of patching look the same in the end.\n\nThis isn't just my worry. Olausson et al. (ICLR 2024), in \"Is Self-Repair a Silver Bullet for Code Generation?\", found that once you count what repair costs, the gains over just sampling more are \"often modest\", vary a lot between subsets of the data, and sometimes disappear. They also found that self-repair is limited by how well the model can judge its own code. Chen et al.'s Self-Debugging work (arXiv 2023) points the other way: a model that reads its own execution results and explains its code can fix a real share of its own mistakes. Both can be true. Repair helps sometimes. You only know when if you can see what the generator did before repair started.\n\nThe same idea runs through how code generation gets evaluated in the first place. The Codex paper (Chen et al., 2021) defined functional correctness by running the generated program against tests, and it noted that repeated sampling is a \"surprisingly effective strategy\". Retries buy a lot. That's why you have to count them separately from first attempts.\n\n## What heal-yield records\n\nSo I built heal-yield, a small measurement harness for self-healing test loops. On every run it logs two numbers: first-pass and post-heal. The runs go into a separate repo, heal-yield-runs, which is append-only. Nothing gets overwritten, and nothing quietly disappears. That includes the runs where healing failed and the suite stayed red.\n\nThe append-only part does most of the work. A results file you can edit will drift toward the runs you're happy with, even if nobody means it to. An append-only log won't. The bad run from last Tuesday sits next to the good one from today, and both count.\n\n## Why the failed runs matter\n\nThe failed runs are the honest baseline. First-pass yield over time tells you whether the generator is actually getting better. Post-heal yield over time can look flat and healthy while the healing layer quietly does more and more of the work, covering for a generator that hasn't improved. If you only log post-heal, you can't tell those two situations apart.\n\nDelete the runs where healing failed and the problem gets worse. You've removed exactly the cases that show where the loop's limit is. What's left is a dataset that says the loop works, built by throwing out the evidence that sometimes it doesn't.\n\n## The metric I watch instead\n\nA green suite at the end isn't the metric. The gap between first-pass and post-heal is. A small gap means the generator is doing the work. A large or growing gap means the healing layer is carrying it, and that has a cost in retries, latency and trust that the final number never shows. Record both, on every run, and keep the ones that went badly.",
+  "references": [
+    {
+      "title": "Olausson, Inala, Wang, Gao, Solar-Lezama — Is Self-Repair a Silver Bullet for Code Generation? (ICLR 2024)",
+      "url": "https://arxiv.org/abs/2306.09896",
+      "note": "Finds that self-repair gains are often modest once repair cost is counted, vary across data subsets, and are limited by the model's ability to judge its own code."
+    },
+    {
+      "title": "Chen, Lin, Schärli, Zhou — Teaching Large Language Models to Self-Debug (arXiv 2023)",
+      "url": "https://arxiv.org/abs/2304.05128",
+      "note": "Self-Debugging: the model fixes its own code using execution results and its own explanations, with no human feedback. This is the mechanism a healing loop relies on."
+    },
+    {
+      "title": "Chen, Tworek, Jun et al. — Evaluating Large Language Models Trained on Code (arXiv 2021)",
+      "url": "https://arxiv.org/abs/2107.03374",
+      "note": "The Codex/HumanEval paper. Measures functional correctness by running generated code against tests and notes how much repeated sampling helps, which is why first attempts and retries should be counted separately."
+    }
+  ]
+}
