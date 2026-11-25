@@ -1,0 +1,34 @@
+{
+  "slug": "2026-11-25-llmops-efbca3",
+  "title": "A self-healing test loop almost always looks healthy.",
+  "date": "2026-11-25",
+  "pillar": "llmops",
+  "format": "proof-drop",
+  "body": "A self-healing test loop almost always looks healthy. It patches its own failures before it reports, so the number you see is the pass rate after it rescued itself.\n\nThat tells you nothing about how often the first attempt was wrong.\n\nSo I built heal-yield, a small harness that logs two numbers every run: first-pass yield, before any healing, and post-heal yield, after. The gap between them is what the green checkmark hides — how hard the loop is working to cover for a generator that keeps missing.\n\nIt keeps every run too, including the bad ones. Append-only. The failed runs are the ones that tell you whether healing is actually improving or just masking a generator drifting worse.\n\nThe habit I'm building: don't measure the system after it's had a chance to fix itself. Measure the first attempt, then the rescue, and watch the distance between them.\n\nA loop that heals more each week isn't necessarily getting better. It might just be failing more at the start and hiding it well.",
+  "hashtags": [
+    "#SelfHealingTests",
+    "#TestAutomation",
+    "#LLMOps",
+    "#AIEngineering"
+  ],
+  "cardImage": "/writing/2026-11-25-llmops-efbca3.png",
+  "linkedinUrl": "",
+  "longform": "## The number a self-healing loop shows you\n\nA self-healing test loop generates something, runs it, and when a check fails it tries to repair the failure before reporting. The dashboard shows the result after that repair, which is the right number if all you want to know is whether the output works.\n\nIt is a bad number if you want to know whether the generator is any good. A loop that gets everything right first time and a loop that misses most of the time and then patches the misses can show the same green checkmark. The report only covers the end state, so it can't tell those two systems apart.\n\n## What the post-heal number hides\n\nThis isn't a new observation, and the research on LLM self-repair makes the same point in its own terms. Olausson et al. (\"Is Self-Repair a Silver Bullet for Code Generation?\", ICLR 2024) found that once you count what the repair step costs, the gains from self-repair are often modest, vary a lot across subsets of the data, and sometimes disappear. They also point to the model's ability to give useful feedback on its own output as the bottleneck. In other words, how well a repair loop works depends on things you can't see if you only look at the final pass.\n\nHuang et al. (\"Large Language Models Cannot Self-Correct Reasoning Yet\", ICLR 2024) go further for reasoning tasks. Without external feedback, models struggle to correct themselves, and performance can get worse after a self-correction pass. So \"it went through a fix step\" doesn't mean \"it got better.\" You have to measure that separately.\n\nCode-generation benchmarks have dealt with a version of this for years. In the Codex paper, Chen et al. (\"Evaluating Large Language Models Trained on Code\", 2021) show that repeated sampling raises the share of problems solved well above what one attempt gets. That is why the field reports first-attempt and many-attempt results separately: they measure different things.\n\n## What heal-yield does\n\nheal-yield is my answer to this for self-healing test loops, and it's deliberately small. Every run, it logs two numbers:\n\n- **First-pass yield**: the share that passed before any healing happened.\n- **Post-heal yield**: the share that passed after the loop had its chance to fix things.\n\nThe gap between them is the part the green checkmark hides. It shows how much work the healing step is doing to cover for the generator.\n\nThe other half is heal-yield-runs, a separate repo of append-only run artifacts. Every run goes in, including the bad ones. Nothing gets edited or tidied afterwards. That matters more than the two numbers do, because one run's gap is only a snapshot, and the trend comes from the history. If I only kept the runs that looked fine, I'd have rebuilt the same blind spot I was trying to get rid of.\n\n## Why the failed runs carry the signal\n\nWatching the gap over time lets you tell apart two stories that look identical from the outside:\n\n1. The generator is improving, first-pass yield goes up, and healing has less to do.\n2. The generator is drifting worse, first-pass yield goes down, and healing works harder to keep post-heal yield flat.\n\nIn both cases post-heal yield stays put. Only the first-pass number and the gap show which one is happening, and you only see the second story if the runs where the first pass went badly were kept.\n\n## The habit\n\nThe rule I'm taking from this: don't judge a system after it has had a chance to fix itself. Measure the first attempt, measure the rescue, and watch the distance between them. A loop that heals more each week isn't necessarily getting better. It might be failing more at the start and hiding it well.",
+  "references": [
+    {
+      "title": "Olausson, Inala, Wang, Gao, Solar-Lezama — Is Self-Repair a Silver Bullet for Code Generation? (ICLR 2024)",
+      "url": "https://arxiv.org/abs/2306.09896",
+      "note": "Finds that once repair cost is counted, self-repair gains are often modest, inconsistent across data subsets, or absent, and names feedback quality as the bottleneck."
+    },
+    {
+      "title": "Huang, Chen, Mishra, Zheng, Yu, Song, Zhou — Large Language Models Cannot Self-Correct Reasoning Yet (ICLR 2024)",
+      "url": "https://arxiv.org/abs/2310.01798",
+      "note": "Shows LLMs struggle to self-correct reasoning without external feedback, and performance can drop after self-correction."
+    },
+    {
+      "title": "Chen et al. — Evaluating Large Language Models Trained on Code (arXiv 2021)",
+      "url": "https://arxiv.org/abs/2107.03374",
+      "note": "The Codex/HumanEval paper. Shows repeated sampling raises solve rate well above a single attempt, which is why first-attempt and many-attempt results get reported separately."
+    }
+  ]
+}
